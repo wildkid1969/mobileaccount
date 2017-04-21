@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.ExerciseResultMapper">
+
+	<resultMap id="ExerciseResult" type="com.hc360.mobileaccount.po.ExerciseResult">
+        <result property="id" column="id"/>
+        <result property="roomid" column="roomid"/>
+        <result property="courseid" column="courseid"/>
+        <result property="userid" column="userid"/>
+        <result property="partnerid" column="partnerid"/>
+        <result property="evaluate" column="evaluate"/>
+        <result property="audioUrl" column="audio_url"/>
+        <result property="timeLength" column="time_length"/>
+        <result property="createtime" column="createtime"/>
+        <result property="score" column="score"/>
+        <result property="isPass" column="is_pass"/>
+        <result property="isDown" column="is_down"/>
+        
+        <result property="roleType" column="roleType"/>
+        
+        <result property="courseName" column="courseName"/>
+        
+        <collection property="partner" ofType="Account">
+        	<result property="accountid" column="accountid"/>
+        	<result property="phonenum" column="phonenum"/>
+			<result property="nickname" column="nickname"/>
+			<result property="headerimg" column="headerimg"/>
+			<result property="corpname" column="corpname"/>
+			<result property="aposition" column="aposition"/>
+			<result property="mainind" column="mainind"/>
+        </collection>
+        
+        <collection property="course" ofType="MarketingCourse">
+        	<result property="id" column="courseid"/>
+        	<result property="name" column="name"/>
+        	<result property="coverUrl" column="cover_url"/>
+        </collection>
+	</resultMap>
+	
+	<resultMap id="User" type="com.hc360.mobileaccount.po.Account">
+		<result property="accountid" column="accountid"/>
+		<result property="headerimg" column="headerimg"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,roomid,courseid,userid,partnerid,evaluate,audio_url,time_length,createtime,score,is_pass,is_down
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_exercise_result (
+        	id ,
+        	roomid ,
+        	courseid ,
+        	userid ,
+        	partnerid ,
+        	evaluate ,
+        	audio_url ,
+        	time_length ,
+        	createtime ,
+        	score ,
+        	is_pass ,
+        	is_down
+        ) VALUES (
+        	#{id} ,
+        	#{roomid} ,
+        	#{courseid} ,
+        	#{userid} ,
+        	#{partnerid} ,
+        	#{evaluate} ,
+        	#{audioUrl} ,
+        	#{timeLength} ,
+        	NOW(),
+        	#{score} ,
+        	#{isPass} ,
+        	0
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_exercise_result
+        <set>
+			<if test="courseid != null and courseid != ''">
+	        	courseid = #{courseid} ,
+	        </if>
+			<if test="userid != null and userid != ''">
+	        	userid = #{userid} ,
+	        </if>
+			<if test="partnerid != null and partnerid != ''">
+	        	partnerid = #{partnerid} ,
+	        </if>
+			<if test="evaluate != null and evaluate != ''">
+	        	evaluate = #{evaluate} ,
+	        </if>
+			<if test="audioUrl != null and audioUrl != ''">
+	        	audio_url = #{audioUrl} ,
+	        </if>
+			<if test="timeLength != null and timeLength != ''">
+	        	time_length = #{timeLength} ,
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	createtime = #{createtime} ,
+	        </if>
+			<if test="score != null and score != ''">
+	        	score = #{score} ,
+	        </if>
+			<if test="isPass != null and isPass != ''">
+	        	is_pass = #{isPass} ,
+	        </if>
+			<if test="isDown != null and isDown != ''">
+	        	is_down = #{isDown} ,
+	        </if>
+	    </set>
+        WHERE 
+	       roomid = #{roomid}
+	</update>
+	
+	<update id="saveAudioUrlByUserid">
+		UPDATE sp_exercise_result SET
+	        audio_url = #{audioUrl} ,
+	        time_length = #{timeLength},
+	        is_down = #{isDown}
+        WHERE 
+	         userid = #{userid}
+	    ORDER BY createtime desc
+	    LIMIT 1
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_exercise_result WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getByRoomId" resultMap="ExerciseResult">
+		SELECT er.*,i.accountid,i.nickname,i.headerimg,i.corpname,mc.id,mc.name,mc.cover_url 
+		FROM sp_exercise_result er
+		LEFT JOIN p_account_info i ON er.partnerid = i.accountid
+		LEFT JOIN sp_marketing_course mc ON mc.id = er.courseid
+	    WHERE er.roomid = #{roomid} 
+	</select>
+	
+	<!-- roleType当前用户角色 -->
+    <select id="getResultAndPartnerByRoomId" resultMap="ExerciseResult">
+		SELECT er.*,i.accountid,i.nickname,i.headerimg,i.corpname,mc.id,mc.name,mc.cover_url 
+		FROM sp_exercise_result er
+		<if test="roleType==1">
+			LEFT JOIN p_account_info i ON er.partnerid = i.accountid
+		</if>
+		<if test="roleType==2">
+			LEFT JOIN p_account_info i ON er.userid = i.accountid
+		</if>
+		LEFT JOIN sp_marketing_course mc ON mc.id = er.courseid
+	    WHERE er.roomid = #{roomid} 
+	</select>
+	
+    <select id="getAudioUrlByRoomId" resultMap="ExerciseResult">
+		SELECT <include refid="columns" /> FROM sp_exercise_result
+	    WHERE roomid = #{roomid} and is_down = 0
+	</select>
+		
+    
+    <select id="getExerciseResultCount" resultType="Integer">
+    	SELECT count(1) FROM sp_exercise_result 
+    	<where>
+    		<if test="userid!=null and userid!=''">
+    			userid = #{userid}
+    		</if>
+    	</where>
+    </select>
+    
+    <select id="getTodayExerciseUsers" resultMap="User">
+    	SELECT i.accountid,i.headerimg FROM sp_exercise_result er 
+		LEFT JOIN p_account_info i ON er.userid = i.accountid
+		WHERE date(er.createtime) = #{dateStr} AND er.createtime IS NOT NULL
+		GROUP BY er.userid
+		ORDER BY er.createtime DESC
+		LIMIT 50
+    </select>
+    
+    <!-- 当前用户的对练列表:roleType当前用户的角色 -->
+    <select id="getExerciseResultList" resultMap="ExerciseResult">
+		(SELECT er.*,1 roleType,i2.accountid,i2.phonenum,i2.nickname,i2.headerimg,i2.corpname,i2.aposition,i2.mainind,mc.`name` courseName 
+		FROM sp_exercise_result er
+		LEFT JOIN p_account_info i2 ON i2.accountid = er.partnerid
+		LEFT JOIN sp_marketing_course mc ON mc.id = er.courseid
+		 WHERE er.userid=#{userid}
+		)
+		UNION ALL
+		(SELECT er.*,2 roleType,i2.accountid,i2.phonenum,i2.nickname,i2.headerimg,i2.corpname,i2.aposition,i2.mainind,mc.`name` courseName 
+		FROM sp_exercise_result er
+		LEFT JOIN p_account_info i2 ON i2.accountid = er.userid
+		LEFT JOIN sp_marketing_course mc ON mc.id = er.courseid
+		WHERE er.partnerid=#{userid}
+		)
+		ORDER BY createtime DESC
+		LIMIT #{start},#{size}
+    </select>
+    
+    <select id="getExerciseResultUnionCount" resultType="Integer">
+    	SELECT sum(cnt) FROM 
+    	(SELECT count(1) cnt FROM sp_exercise_result  WHERE userid=#{userId}
+		UNION ALL 
+		SELECT count(1) cnt FROM sp_exercise_result  WHERE partnerid=#{userId}
+		)a 
+    </select>
+    
+    
+    <select id="getExerciseUserListByCourse" resultMap="User">
+    	SELECT i.accountid,i.headerimg FROM sp_exercise_result er 
+		LEFT JOIN p_account_info i ON er.userid = i.accountid
+		WHERE er.courseid=#{courseid} and er.createtime IS NOT NULL
+		GROUP BY er.userid
+		ORDER BY er.createtime DESC
+		LIMIT #{size}
+    </select>
+    
+    <select id="getAllNoDownloadResult" resultMap="ExerciseResult">
+    	SELECT <include refid="columns" /> FROM sp_exercise_result WHERE is_down=0
+    </select>
+    
+</mapper>
+

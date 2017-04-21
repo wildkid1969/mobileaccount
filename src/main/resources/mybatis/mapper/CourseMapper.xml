@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.CourseMapper">
+
+	<resultMap id="Course" type="com.hc360.mobileaccount.po.Course">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="labelids" column="labelids"/>
+        <result property="labelNames" column="labelnames"/>
+        <result property="coverUrl" column="cover_url"/>
+        <result property="type" column="type"/>
+        <result property="createtime" column="createtime"/>
+        <result property="enable" column="enable"/>
+        
+        <result property="praiseCnt" column="praiseCnt"/>
+        <result property="replyCnt" column="replyCnt"/>
+        
+        <result property="teacherId" column="teacherId"/>
+        <result property="teacherName" column="teacherName"/>
+        <result property="chapterCnt" column="chapterCnt"/>
+        <result property="gradeId" column="gradeId"/>
+        <result property="gradeName" column="gradeName"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,name,description,labelids,labelnames,cover_url,type,createtime,enable
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_course (
+        	id ,
+        	name ,
+        	description ,
+        	labelids ,
+        	cover_url ,
+        	type ,
+        	createtime ,
+        	enable 
+        ) VALUES (
+        	#{id} ,
+        	#{name} ,
+        	#{description} ,
+        	#{labelids} ,
+        	#{coverUrl} ,
+        	#{type} ,
+        	#{createtime} ,
+        	#{enable} 
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update">
+    <![CDATA[
+        UPDATE sp_course SET
+	        name = #{name} ,
+	        description = #{description} ,
+	        labelids = #{labelids} ,
+	        cover_url = #{coverUrl} ,
+	        type = #{type} ,
+	        createtime = #{createtime} ,
+	        enable = #{enable} 
+        WHERE 
+	        id = #{id} 
+    ]]>
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_course WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getCourseById" resultMap="Course">
+		SELECT c.*,t.username teacherName,t.userid teacherId,cc.chapterCnt,g.id gradeId,g.`name` gradeName
+	    <![CDATA[
+		    FROM sp_course c
+		    LEFT JOIN sp_teacher_n_course tnc on tnc.courseid = c.id
+			LEFT JOIN sp_teacher t ON t.userid = tnc.userid
+			LEFT JOIN(
+				SELECT count(1) chapterCnt,courseid FROM sp_course_chapter WHERE courseid=#{id}
+			)cc ON cc.courseid=c.id
+			LEFT JOIN sp_grade_n_course gnc ON gnc.courseid = c.id
+			LEFT JOIN sp_grade g ON g.id = gnc.gradeid
+	        WHERE 
+		        c.id = #{id} 
+	    ]]>
+	</select>
+		
+    <select id="getRecommendCourseIdListByLabelId" resultType="Long">
+    	SELECT c.id FROM sp_course c
+		LEFT JOIN sp_grade_n_course gnc ON gnc.courseid = c.id
+		WHERE c.labelids like CONCAT('%',#{labelId},'%' ) and c.enable=1
+		AND EXISTS (SELECT courseid FROM sp_course_chapter cc WHERE c.id=cc.courseid and cc.enable=1)
+		<!-- <if test="level!=0">
+			AND gnc.gradeid &lt;= #{level}
+		</if>  -->
+		
+    </select>
+    
+    <select id="getCourseListOfGradeByGradeId" resultType="Course">
+    	select c.* from sp_course c
+		LEFT JOIN sp_grade_n_course gnc on c.id=gnc.courseid
+		WHERE gnc.gradeid=#{gradeId} AND c.`enable`=1
+    </select>
+    
+    <select id="getCourseIdsByLabelId" resultType="Long">
+		SELECT c.id FROM sp_course c
+		WHERE c.labelids like CONCAT('%',#{labelId},'%' ) and c.enable=1 
+		AND EXISTS (SELECT courseid FROM sp_course_chapter cc WHERE c.id=cc.courseid and cc.enable=1)
+		LIMIT 20
+	</select>
+	
+	<select id="getTeacherNewlyCourseList" resultMap="Course">
+		SELECT c.*,if(a.userStudyCnt>0,a.userStudyCnt,0) userStudyCnt FROM sp_course c
+		LEFT JOIN sp_teacher_n_course tnc ON c.id=tnc.courseid
+		LEFT JOIN(
+		SELECT count(1) userStudyCnt,courseid FROM sp_user_study_log WHERE userid=#{userid} GROUP BY courseid
+		)a ON c.id=a.courseid
+		WHERE tnc.userid=#{userid}
+		ORDER BY c.createtime DESC
+		LIMIT #{size}
+	</select>
+	
+	    <!-- 随机获取 -->
+<!--     <select id="getRandomCourses" resultMap="Course">
+    	SELECT * FROM sp_course AS t1 
+		JOIN (SELECT ROUND(RAND() * ((SELECT MAX(id) FROM sp_label)-(SELECT MIN(id) FROM sp_label))+(SELECT MIN(id) FROM sp_label)) AS id) AS t2
+		WHERE t1.id >= t2.id and t1.enable=1
+		ORDER BY t1.id 
+		LIMIT #{size}
+    </select> -->
+    <select id="getRandomCourses" resultMap="Course">
+    	SELECT * FROM sp_course c
+    	WHERE enable=1 AND EXISTS (SELECT courseid FROM sp_course_chapter cc WHERE c.id=cc.courseid and cc.enable=1 )
+		LIMIT #{size}
+    </select>
+    
+    <select id="getCourseLabels" resultType="String">
+    	SELECT labelids FROM sp_course
+    </select>
+    
+    <select id="getCoursePraiseCntAndReplyCntById" resultMap="Course">
+    	SELECT SUM(praise_cnt) praiseCnt,cnc.replyCnt FROM sp_course_chapter cc
+		LEFT JOIN(
+			SELECT COUNT(1) replyCnt,courseid FROM sp_course_n_comment WHERE courseid=#{id}
+		) cnc ON cc.courseid=cnc.courseid 
+		WHERE cc.courseid=#{id}
+    </select>
+
+</mapper>
+

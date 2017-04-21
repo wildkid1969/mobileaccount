@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd   
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd ">
+        
+	<context:component-scan base-package="com.hc360.mobileaccount.service" />
+	<context:component-scan base-package="com.hc360.mobileaccount" />	
+
+	<!-- 启用Transactional注解 -->
+	<tx:annotation-driven transaction-manager="txManager" />
+	
+	<!-- 定义事务管理器（声明式的事务） -->  
+	<bean id="txManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<tx:annotation-driven transaction-manager="txManagerData" />
+	
+	<bean id="txManagerData"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSourceData" />
+	</bean>	
+	
+	<!-- Spring的声明式事务管理  -->
+ 	<tx:advice id="txAdvice" transaction-manager="txManager">
+		<tx:attributes>
+			<tx:method name="insert*"  propagation="REQUIRED" rollback-for="Exception"/>
+			<tx:method name="update*" propagation="REQUIRED" rollback-for="Exception" />
+			<tx:method name="del*" propagation="REQUIRED" rollback-for="Exception" />
+			<tx:method name="get*"  propagation="SUPPORTS"/>
+			<tx:method name="*" propagation="SUPPORTS" />
+		</tx:attributes>
+	</tx:advice>
+	
+	<!-- Spring的声明式事务管理  -->
+ 	<tx:advice id="txAdvice1" transaction-manager="txManagerData">
+		<tx:attributes>
+			<tx:method name="insert*"  propagation="REQUIRED" rollback-for="Exception"/>
+			<tx:method name="update*" propagation="REQUIRED" rollback-for="Exception" />
+			<tx:method name="del*" propagation="REQUIRED" rollback-for="Exception" />
+			<tx:method name="get*"  propagation="SUPPORTS"/>
+			<tx:method name="*" propagation="SUPPORTS" />
+		</tx:attributes>
+	</tx:advice>
+
+	<!-- 声明切入点 -->
+	<aop:config proxy-target-class="true">
+		<aop:advisor advice-ref="txAdvice" pointcut="execution(* com.hc360.mobileaccount.service..*.*(..))" />
+	</aop:config>
+	
+	<aop:config proxy-target-class="true">
+		<aop:advisor advice-ref="txAdvice1" pointcut="execution(* com.hc360.mobileaccount.serviceoracle..*.*(..))" />
+	</aop:config>
+	
+	<bean id="reward56" class="com.hc360.mobileaccount.po.Reward">
+		<property name="rewardName" value="5.6折物流优惠券全国通用" />
+		<property name="rewardImg"  value="http://img010.hc360.cn/m7/M0A/82/D3/wKhQo1YFDhyEWAs6AAAAABI8OnU346.png"/>
+		<property name="rewardDuring" value="永久" />
+	</bean>
+	
+	<bean id="rewardJR" class="com.hc360.mobileaccount.po.Reward">
+		<property name="rewardName" value="100万贷款申请券，不用无利息 申请有豪礼" />
+		<property name="rewardImg"  value="http://img010.hc360.cn/m7/M0A/82/D3/wKhQo1YFDhyEWAs6AAAAABI8OnU346.png"/>
+		<property name="rewardDuring" value="永久" />
+	</bean>
+
+	<bean id="rewardlist" class="com.hc360.mobileaccount.po.RewardList">
+		<property name="list">
+			<list>
+				<ref bean="reward56"/>
+				<ref bean="rewardJR"/>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="luck100" class="com.hc360.mobileaccount.po.LuckySocre">
+		<property name="id" value="luck100" />
+		<property name="name" value="15分钟免费时长" />
+		<property name="chance" value="5" />
+		<property name="prod" value="5" />
+		<property name="len" value="15" />
+		<property name="type" value="0" />
+		<property name="imgurl" value="http://img009.hc360.cn/m6/M09/31/16/wKhQoVZMWU6ECi6uAAAAAMfW6ns042.png" />
+		<property name="url" value="" />
+		<property name="startTime" value="" />
+		<property name="endTime" value="" />
+		<property name="disable" value="0" />
+	</bean>
+	<bean id="luck101" class="com.hc360.mobileaccount.po.LuckySocre">
+		<property name="id" value="luck101" />
+		<property name="name" value="30分钟免费时长" />
+		<property name="chance" value="0" />
+		<property name="prod" value="5" />
+		<property name="len" value="30" />
+		<property name="type" value="0" />
+		<property name="imgurl" value="http://img008.hc360.cn/m6/M09/31/16/wKhQoVZMWU6EfSQLAAAAAHGg4WQ248.png" />
+		<property name="url" value="" />
+		<property name="startTime" value="" />
+		<property name="endTime" value="" />
+		<property name="disable" value="0" />
+	</bean>
+	<bean id="luck102" class="com.hc360.mobileaccount.po.LuckySocre">
+		<property name="id" value="luck102" />
+		<property name="name" value="60分钟免费时长" />
+		<property name="chance" value="0" />
+		<property name="prod" value="5" />
+		<property name="len" value="60" />
+		<property name="type" value="0" />
+		<property name="imgurl" value="http://img005.hc360.cn/m8/M05/F5/6B/wKhQpVZMWYOEQ0ZOAAAAAH_nXL4438.png" />
+		<property name="url" value="" />
+		<property name="startTime" value="" />
+		<property name="endTime" value="" />
+		<property name="disable" value="0" />
+	</bean>
+	<bean id="luck103" class="com.hc360.mobileaccount.po.LuckySocre">
+		<property name="id" value="luck103" />
+		<property name="name" value="苹果iPhone 6S Plus" />
+		<property name="chance" value="0" />
+		<property name="prod" value="5" />
+		<property name="len" value="0" />
+		<property name="type" value="0" />
+		<property name="imgurl" value="http://img001.hc360.cn/m7/M0A/C8/C9/wKhQo1biRd2EBCIaAAAAALRe24U527.png" />
+		<property name="url" value="" />
+		<property name="startTime" value="" />
+		<property name="endTime" value="" />
+		<property name="disable" value="0" />
+	</bean>
+	<bean id="luck200" class="com.hc360.mobileaccount.po.LuckySocre">
+		<property name="id" value="luck200" />
+		<property name="name" value="河狸家30元代金券" />
+		<property name="chance" value="100" />
+		<property name="prod" value="100" />
+		<property name="len" value="0" />
+		<property name="type" value="1" />
+		<property name="imgurl" value="http://img010.hc360.cn/m8/M0E/A4/D1/wKhQpVbixDeEAoS3AAAAAGbSzEo451.png" />
+		<property name="url" value="http://168.mobile.hc360.com/page/114/person/huodongCMM/helijia/index5Frame.html" />
+		<property name="startTime" value="" />
+		<property name="endTime" value="2016-03-27 00:00:00" />
+		<property name="disable" value="0" />
+	</bean>
+	<bean id="luck201" class="com.hc360.mobileaccount.po.LuckySocre">
+		<property name="id" value="luck201" />
+		<property name="name" value="滴滴百元大礼包" />
+		<property name="chance" value="100" />
+		<property name="prod" value="100" />
+		<property name="len" value="0" />
+		<property name="type" value="1" />
+		<property name="imgurl" value="http://img005.hc360.cn/m7/M06/DA/37/wKhQo1bixJ6EQlsRAAAAAEZAF6g244.png" />
+		<property name="url" value="http://168.mobile.hc360.com/page/114/person/huodongCMM/taxiDrops/taxiDropsFrame.html" />
+		<property name="startTime" value="2016-03-11 00:00:00" />
+		<property name="endTime" value="2016-04-11 00:00:00" />
+		<property name="disable" value="0" />
+	</bean>
+	<bean id="luck202" class="com.hc360.mobileaccount.po.LuckySocre">
+		<property name="id" value="luck202" />
+		<property name="name" value="80分钟免费时长" />
+		<property name="chance" value="100" />
+		<property name="prod" value="450" />
+		<property name="len" value="80" />
+		<property name="type" value="1" />
+		<property name="imgurl" value="http://img005.hc360.cn/m8/M0D/A4/25/wKhQplbihnKEeQSgAAAAAHOLbEo311.png" />
+		<property name="url" value="" />
+		<property name="startTime" value="" />
+		<property name="endTime" value="" />
+		<property name="disable" value="0" />
+	</bean>
+	<bean id="luck203" class="com.hc360.mobileaccount.po.LuckySocre">
+		<property name="id" value="luck203" />
+		<property name="name" value="160分钟免费时长" />
+		<property name="chance" value="100" />
+		<property name="prod" value="750" />
+		<property name="len" value="160" />
+		<property name="type" value="1" />
+		<property name="imgurl" value="http://img006.hc360.cn/m8/M06/9E/98/wKhQpVbihnKEXHXkAAAAAIBl3Ts452.png" />
+		<property name="url" value="" />
+		<property name="startTime" value="" />
+		<property name="endTime" value="" />
+		<property name="disable" value="0" />
+	</bean>
+	<bean id="luck204" class="com.hc360.mobileaccount.po.LuckySocre">
+		<property name="id" value="luck204" />
+		<property name="name" value="480分钟免费时长" />
+		<property name="chance" value="100" />
+		<property name="prod" value="1650" />
+		<property name="len" value="480" />
+		<property name="type" value="1" />
+		<property name="imgurl" value="http://img004.hc360.cn/m8/M07/9E/98/wKhQpVbihnKEbOQzAAAAAHlCHfY836.png" />
+		<property name="url" value="" />
+		<property name="startTime" value="" />
+		<property name="endTime" value="" />
+		<property name="disable" value="0" />
+	</bean>
+	<bean id="luck205" class="com.hc360.mobileaccount.po.LuckySocre">
+		<property name="id" value="luck205" />
+		<property name="name" value="金士顿U盘" />
+		<property name="chance" value="100" />
+		<property name="prod" value="2400" />
+		<property name="len" value="0" />
+		<property name="type" value="1" />
+		<property name="imgurl" value="http://img004.hc360.cn/m7/M04/93/59/wKhQpFbix4CERcp-AAAAAP7L1QE037.png" />
+		<property name="url" value="" />
+		<property name="startTime" value="" />
+		<property name="endTime" value="" />
+		<property name="disable" value="1" />
+	</bean>
+	<bean id="luck206" class="com.hc360.mobileaccount.po.LuckySocre">
+		<property name="id" value="luck206" />
+		<property name="name" value="小米充电宝" />
+		<property name="chance" value="100" />
+		<property name="prod" value="4200" />
+		<property name="len" value="0" />
+		<property name="type" value="1" />
+		<property name="imgurl" value="http://img011.hc360.cn/m7/M0F/DA/B0/wKhQo1biyJGEGCp1AAAAAIX3DFc961.png" />
+		<property name="url" value="" />
+		<property name="startTime" value="" />
+		<property name="endTime" value="" />
+		<property name="disable" value="1" />
+	</bean>
+
+	<bean id="score" class="com.hc360.mobileaccount.po.CommonPoUtil">
+        <property name="timeInterval">
+            <map>
+                <entry key="start" value="2016-01-25 00:00:00" />
+                <entry key="end" value="2016-02-16 00:00:00" />
+            </map>
+        </property>
+		<property name="scoreTypeMap">
+			<map>
+				<entry key="qd" value="20" />
+				<entry key="fx" value="20" />
+				<entry key="yqm" value="20" />
+				<entry key="wsxx" value="30" />
+				<entry key="sz" value="30" />
+			</map>
+		</property>
+		<property name="luckyMap">
+			<map>
+				<entry key="luck100"   value-ref="luck100"/>
+				<entry key="luck101"   value-ref="luck101"/>
+				<entry key="luck102"   value-ref="luck102"/>
+				<entry key="luck103"   value-ref="luck103"/>
+				<entry key="luck200"   value-ref="luck200"/>
+				<entry key="luck201"   value-ref="luck201"/>
+				<entry key="luck202"   value-ref="luck202"/>
+				<entry key="luck203"   value-ref="luck203"/>
+				<entry key="luck204"   value-ref="luck204"/>
+				<!-- <entry key="luck205"   value-ref="luck205"/>
+				<entry key="luck206"   value-ref="luck206"/> -->
+			</map>
+		</property>
+	</bean>
+	<bean id="config" class="com.hc360.mobileaccount.po.ConfigUtil">
+		<property name="companyValue" value="3"/>
+		<property name="uploadTime" value="3600"/>
+	</bean>
+	<bean id="glconfig" class="com.hc360.mobileaccount.po.GLConfig">
+		<property name="brandid" value="hzthc" />
+		<property name="clientid" value="hzthc"/>
+		<property name="key" value="5cbab7e73d76d327"/>
+	</bean>
+</beans>

@@ -1,0 +1,14 @@
+$!message
+
+<form class="form-horizontal" role="form" action="$rc.contextPath/validation/validateUser" method="post">
+    name : #springFormInput("user.name", "") 
+	#springShowErrors("","")<br/>
+	
+    age : #springFormInput("user.age", "") 
+	#springShowErrors("","")<br/>
+	
+    zip code : #springFormInput("user.zipCode", "")
+	#springShowErrors("","")<br/>
+	
+    <input type="submit" value="提交表单"></input>
+</form>

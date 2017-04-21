@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.UserStudyLogMapper">
+
+	<resultMap id="UserStudyLog" type="com.hc360.mobileaccount.po.UserStudyLog">
+        <result property="id" column="id"/>
+        <result property="userid" column="userid"/>
+        <result property="courseid" column="courseid"/>
+        <result property="chapterid" column="chapterid"/>
+        <result property="videopoint" column="videopoint"/>
+        <result property="createtime" column="createtime"/>
+        <result property="endtime" column="endtime"/>
+        <result property="finishtime" column="finishtime"/>
+        <result property="timeLength" column="time_length"/>
+        <result property="chaptype" column="chaptype"/>
+        <result property="state" column="state"/>
+	</resultMap>
+	
+	<resultMap id="Account" type="com.hc360.mobileaccount.po.Account">
+        <result property="accountid" column="accountid"/>
+        <result property="phonenum" column="phonenum"/>
+        <result property="nickname" column="nickname"/>
+        <result property="headerimg" column="headerimg"/>
+        <result property="userType" column="user_type"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,userid,courseid,chapterid,videopoint,createtime,endtime,finishtime,time_length,chaptype,state
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_user_study_log (
+        	id ,
+        	userid ,
+        	courseid ,
+        	chapterid ,
+        	videopoint,
+        	createtime ,
+        	endtime ,
+        	finishtime ,
+        	time_length ,
+        	chaptype,
+        	state 
+        ) VALUES (
+        	#{id} ,
+        	#{userid} ,
+        	#{courseid} ,
+        	#{chapterid} ,
+        	#{videopoint} ,
+        	NOW() ,
+        	#{endtime} ,
+        	#{finishtime} ,
+        	#{timeLength} ,
+        	#{chaptype} ,
+        	#{state} 
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_user_study_log
+	    <set>
+	    	endtime = #{endtime} ,
+			<if test="userid != null and userid != ''">
+	        	userid = #{userid} ,
+	        </if>
+			<if test="courseid != null and courseid != ''">
+	        	courseid = #{courseid} ,
+	        </if>
+			<if test="chapterid != null and chapterid != ''">
+	        	chapterid = #{chapterid} ,
+	        </if>
+			<if test="videopoint != null and videopoint != ''">
+	        	videopoint = #{videopoint} ,
+	        </if>
+			<if test="finishtime != null and finishtime != ''">
+	        	finishtime = #{finishtime} ,
+	        </if>
+			<if test="timeLength != null and timeLength != ''">
+	        	time_length = #{timeLength} ,
+	        </if>
+			<if test="chaptype != null and chaptype != ''">
+	        	chaptype = #{chaptype} ,
+	        </if>
+			<if test="state != null and state != ''">
+	        	state = #{state} 
+	        </if>
+	    </set>
+        <where>
+			<if test="userid != null and userid != ''">
+	        	and userid = #{userid}
+	        </if>
+			<if test="chapterid != null and chapterid != ''">
+	        	and chapterid = #{chapterid}
+	        </if>
+			<if test="state != null and state != ''">
+	        	and state = #{state}
+	        </if>
+	    </where>
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_user_study_log WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="UserStudyLog">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_user_study_log 
+	        WHERE 
+		        id = #{id} 
+	    ]]>
+	</select>
+		
+    <select id="getUserStudyLogCount" parameterType="UserStudyLog" resultType="Integer">
+        SELECT count(1) FROM sp_user_study_log 
+        <where>
+			<if test="userid != null and userid != ''">
+	        	and userid = #{userid}
+	        </if>
+			<if test="chapterid != null and chapterid != ''">
+	        	and chapterid = #{chapterid}
+	        </if>
+			<if test="chaptype != null and chaptype != ''">
+	        	and chaptype = #{chaptype}
+	        </if>
+			<if test="state != null and state != ''">
+	        	and state = #{state}
+	        </if>
+	    </where>
+    </select>
+    
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 offset,pageSize,lastRows 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="getChapterUserList" resultMap="Account">
+		SELECT i.accountid,i.phonenum,i.nickname,i.headerimg,i.user_type 
+		FROM sp_user_study_log s 
+		LEFT JOIN p_account_info i ON i.accountid = s.userid
+		WHERE s.chapterid = #{chapterid}
+	    <if test="state!=null and state!=''">
+	    	and s.state=#{state}
+	    </if>
+    </select>
+    
+    <select id="getTodayStudyUserList" resultMap="Account">
+    	SELECT i.accountid,i.phonenum,i.nickname,i.headerimg,i.user_type 
+    	FROM sp_user_study_log s 
+		LEFT JOIN p_account_info i ON i.accountid = s.userid
+		WHERE date(s.createtime) = #{dateStr} AND s.courseid = #{courseid}
+		GROUP BY s.userid
+		ORDER BY s.createtime DESC
+		LIMIT #{size}
+    </select>
+    
+    <select id="getPopChapterids" resultType="Long">
+	    SELECT a.chapterid FROM
+		(SELECT chapterid,count(1) cnt FROM sp_user_study_log 
+		GROUP BY chapterid
+		ORDER BY cnt DESC
+		LIMIT #{size})a
+    </select>
+    
+    
+    <select id="getUserStudyLogList" resultMap="UserStudyLog">
+    	SELECT <include refid="columns" />
+	    FROM sp_user_study_log 
+	    <where>
+			<if test="userid != null and userid != ''">
+	        	and userid = #{userid}
+	        </if>
+			<if test="courseid != null and courseid != ''">
+	        	and courseid = #{courseid}
+	        </if>
+			<if test="chapterid != null and chapterid != ''">
+	        	and chapterid = #{chapterid}
+	        </if>
+			<if test="videopoint != null and videopoint ==0">
+	        	and videopoint > 0
+	        </if>
+			<if test="chaptype != null and chaptype != ''">
+	        	and chaptype = #{chaptype}
+	        </if>
+			<if test="state != null and state != ''">
+	        	and state = #{state}
+	        </if>
+			<if test="dateStr != null and dateStr != ''">
+	        	and date(createtime) = #{dateStr} OR date(endtime) = #{dateStr}
+	        </if>
+	    </where>
+    </select>
+
+	
+	
+</mapper>
+

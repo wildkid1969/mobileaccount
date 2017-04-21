@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 不使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.PaccountGoodAdviseMapper">
+
+	<resultMap id="PaccountGoodAdvise" type="com.hc360.mobileaccount.po.PaccountGoodAdvise">
+        <result property="id" column="id"/>
+        <result property="phone" column="phone"/>
+        <result property="content" column="content"/>
+        <result property="createtime" column="createtime"/>
+        <result property="isCheck" column="is_check"/>
+        <result property="checkTime" column="check_time"/>
+        <result property="rank" column="rank"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,phone,content,createtime,is_check,check_time,rank
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO p_account_good_advise (
+        	id ,
+        	phone ,
+        	content ,
+        	createtime ,
+        	is_check ,
+        	check_time ,
+        	rank 
+        ) VALUES (
+        	#{id} ,
+        	#{phone} ,
+        	#{content} ,
+        	#{createtime} ,
+        	#{isCheck} ,
+        	#{checkTime} ,
+        	#{rank} 
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+    <![CDATA[
+        UPDATE p_account_good_advise SET
+	        phone = #{phone} ,
+	        content = #{content} ,
+	        createtime = #{createtime} ,
+	        is_check = #{isCheck} ,
+	        check_time = #{checkTime} ,
+	        rank = #{rank} 
+        WHERE 
+	        id = #{id} 
+    ]]>
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM p_account_good_advise WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="PaccountGoodAdvise">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM p_account_good_advise 
+	        WHERE 
+		        id = #{id} 
+	    ]]>
+	</select>
+		
+	
+</mapper>
+

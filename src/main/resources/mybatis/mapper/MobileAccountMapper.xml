@@ -1,0 +1,712 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hc360.mobileaccount.dao.MobileAccountMapper">
+    <select id="selectPersonTagAll"   resultType="PersonTag">
+        select * from p_person_tag
+    </select>
+ 
+    <insert id="insertPersonTagNewContactByEntity" parameterType="PersonTagNewContact">
+        insert into p_person_tag_newcontact (cmid,name,phone,createtime,cid) values (#{cmid},#{name},#{phone},#{createtime},#{cid})
+    </insert>
+
+    <insert id="insertPersonTagNewRemarkByEntity" parameterType="PersonTagNewRemark">
+        insert into p_person_tag_newremark (cmid,tagremark,name,createtime,cid) values (#{cmid},#{tagremark},#{name},#{createtime},#{cid})
+    </insert>
+
+    <insert id="insertNewPersonTagByEntity" parameterType="PersonNewTag">
+        insert into p_person_newtag
+            (phone,corpid,name,tagdate,tagphone,alarm,alarmdate,tag,selfdata1,cmid)
+        values 
+            (#{phone},#{corpid},#{name},#{tagdate},#{tagphone},#{alarm},#{alarmdate},#{tag},#{selfdata1},#{cmid})
+    </insert>
+
+	<!--数据迁移  -->
+	<select id="selectPersonTags"   resultType="PersonNewTag">
+			select a.phone ,a.id,a.corpid,a.`name`,a.tagdate,a.tagphone,a.callcount,a.alarm,a.alarmdate,a.tag,a.selfdata1,a.selfdata2,a.cmid,c.tagremark from p_person_tag  a LEFT JOIN p_person_tag_contact b on a.cmid=b.cmid
+LEFT JOIN p_person_tag_remark c on a.cmid=c.cmid group by a.id
+
+	</select>
+	
+	 
+	<insert id="insertNewPersonTag" parameterType="Map">
+		insert into
+		p_person_newtag(phone,corpid,name,tagdate,tagphone,callcount,alarm,alarmdate,tag,selfdata1,selfdata2,cmid)
+		values 
+			(#{Tag.phone},#{Tag.corpid},#{Tag.name},#{tagdate},#{Tag.tagphone},#{Tag.callcount},#{Tag.alarm},#{Tag.alarmdate},#{Tag.tag},#{Tag.selfdata1},#{Tag.selfdata2},#{cmid})
+	 
+	</insert>
+ 
+	<insert id="insertNewContact" parameterType="Map">
+		insert into p_person_tag_newcontact (cmid,name,phone,createtime,cid) values
+			(#{cmid},#{Tag.name},#{Tag.tagphone},#{tagdate},#{Tag.id})
+	</insert>
+
+ 
+ 
+	<insert id="insertNewRemark" parameterType="Map">
+		insert into p_person_tag_newremark (cmid,tagremark,name,createtime,cid) values
+			(#{cmid},#{Tag.tagremark},#{Tag.name},#{tagdate},#{Tag.id})
+	</insert>
+	<!-- end -->
+		<update id="uptCompany" parameterType="Map">
+		update p_person_newtag a set a.selfdata2=#{cname} where a.cmid=#{cmid} 
+	</update>
+	
+	<select id="selectDownloadUrl" parameterType="String"
+		resultType="DownLoad">
+		select downurl,ispatch,remark1,version from
+		p_account_download where
+		version=#{version}
+	</select>
+	<insert id="insert" parameterType="MobileCallInfo"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into p_call_log
+		(phone,type,callid,calledid,starttime,endtime,length)
+		values(
+		#{phone},#{type},#{callid},#{calledid},#{starttime},#{endtime},#{length}
+		)
+	</insert>
+
+	<insert id="saveFeedback" parameterType="Map">
+		insert into p_feedback
+		(deviceid,message,mtime) values (#{deviceid},#{message},NOW())
+	</insert>
+
+	<insert id="joinCorp" parameterType="JoinCorpMM">
+		insert into p_corp_join
+		(corp_name,legal_name,contact,introduction,main_product,disable,createtime,updatetime)
+		values
+		(#{corp_name},#{legal_name},#{contact},#{introduction},#{main_product},'0',now(),now())
+	</insert>
+
+	<insert id="suggestCorp" parameterType="SuggestCorp">
+		insert into
+		p_corp_suggest
+		(corp_name,suggest,phone,disable,createtime,updatetime)
+		values (#{corp_name},#{suggest},#{phone},'0',now(),now())
+	</insert>
+
+	<insert id="insertStatSearch" parameterType="Map">
+		insert into
+		p_action_stat(companyname,level,marktime)
+		values(#{companyname},#{level},#{marktime})
+	</insert>
+
+	<select id="selectYZXTimesByDay" parameterType="String"
+		resultType="Integer">
+		select count(1) from p_yzx_callreq where length > 0 and
+		caller = #{phone} and calltime >= DATE_FORMAT(now(),'%Y-%m-%d')
+	</select>
+
+	<update id="update" parameterType="MobileCallInfo">
+		update p_call_log
+		set endtime =
+		#{endtime},
+		length = #{length}
+		where id = #{id}
+	</update>
+
+	<select id="selectById" parameterType="java.lang.Integer"
+		resultType="MobileCallInfo">
+		select
+		id,phone,type,callid,calledid,starttime,endtime,length from p_call_log
+		where id=#{id}
+	</select>
+
+	<insert id="insertBalanceLog" parameterType="BalanceLog">
+		insert into
+		p_account_balance_log (phone,flownumber,yzxbalance,length,ctime)
+		values(
+		#{phone},#{flownumber},#{yzxbalance},#{length},#{ctime}
+		)
+	</insert>
+
+	<insert id="insertAppCallLog" parameterType="CallLogStat">
+		insert into
+		p_app_call_log
+		(p1,p2,p1name,p2name,p1corpid,p2corpid,kind,calltime,apptype,sw,during,dtype,dos,msgid,deviceid)
+		values(
+		#{p1},#{p2},#{p1name},#{p2name},#{p1corpid},#{p2corpid},#{kind},#{calltime},#{apptype},#{sw},#{during},#{dtype},#{dos},#{msgid},#{deviceid}
+		)
+	</insert>
+
+	<update id="updateAppCallLog" parameterType="CallLogStat">
+		update
+		p_app_call_log set during = #{during},dtype=#{dtype},dos=#{dos} where
+		msgid = #{msgid}
+	</update>
+
+	<select id="countAppCallLog" resultType="Integer" parameterType="String">
+		select count(1) from p_app_call_log where msgid = #{msgid}
+	</select>
+
+	<insert id="insertPhoneFirend" parameterType="Map">
+		insert into p_user_phone_log ( userphone,name,phone,flag) values
+		<foreach collection="list" item="PhoneFirend" index="index"
+			separator=",">
+			(#{phone},#{name},#{phone1},1)
+		</foreach>
+	</insert>
+	<!-- 推荐好友送分钟数 -->
+	<insert id="insertRecommendFriend" parameterType="Map">
+		insert into
+		p_account_givechargemin ( phone,friendphone,createtime,state) values
+		(#{phone},#{friendphone},#{createtime},0)
+	</insert>
+	<select id="selectfriendcount" parameterType="String"
+		resultType="Integer">
+		select count(1) from p_account_info t where
+		t.phonenum=#{phone}
+
+	</select>
+	<select id="selectgivefriendcount" parameterType="String"
+		resultType="Integer">
+		select count(1) from p_account_givechargemin t where
+		t.friendphone=#{phone}
+	</select>
+	<select id="selectgivefriscount" parameterType="AccountGiveMin"
+		resultType="Integer">
+		select count(1) from p_account_givechargemin t where
+		t.friendphone=#{friendphone} and phone=#{phone}
+	</select>
+	<select id="selectfriendInfo" parameterType="String" resultType="AccountGiveMin">
+		select friendphone,state from p_account_givechargemin where
+		phone=#{phone} order by createtime desc
+	</select>
+	<select id="selectchargemincount" parameterType="String"
+		resultType="Integer">
+		select count(1) from p_account_givechargemin t where
+		t.friendphone=#{phone} and t.state=1
+	</select>
+
+	<select id="selectphonebyfriend" parameterType="String"
+		resultType="AccountGiveMin">
+		select phone from p_account_givechargemin t where
+		t.friendphone=#{phone}
+
+	</select>
+
+	<update id="updatefriendstate" parameterType="String">
+		update
+		p_account_givechargemin t set t.state=1 where t.friendphone=#{phone}
+
+	</update>
+	<!-- end -->
+	<insert id="insertSms" parameterType="Map">
+		insert into mobile_sms_reply(msgid,snid,phone,message,replytime)
+		values
+		<foreach collection="content" item="SmsContent" index="index"
+			separator=",">
+			(#{SmsContent.msgid},#{SmsContent.snid},#{SmsContent.phone},#{SmsContent.message},#{SmsContent.replytime})
+		</foreach>
+	</insert>
+
+	<select id="selectBlackList" resultType="String">
+		select phone from
+		mobile_sms_reply where message = 'TD'
+	</select>
+
+	<select id="selectCallStatExcelLog" resultType="CallStatExcelLog"
+		parameterType="Map">
+		SELECT
+		bc.phone caller,ac.called called,ac.calltime
+		calltime
+		FROM
+		p_yzx_callreq ac , p_account_yzx bc
+		WHERE
+		ac.caller =
+		bc.clientNumber AND ac.length > 0 AND ac.`calltime` between
+		#{begin}
+		AND #{end};
+	</select>
+
+	<!-- 普通电话 sw 为 local的 为本地电话 否则为黄页电话， during 大于0 说明打通 否则没有打通 -->
+	<select id="selectCallStatSwIsNotNull" resultType="CallStatExcelLog"
+		parameterType="Map">
+		select
+		a.`p1` caller,a.`p2` called,a.`calltime`
+		calltime,a.`during` during,a.`sw`
+		sw
+		from
+		p_app_call_log a
+		WHERE
+		a.`p2` !=
+		'' AND a.`p1` != '' AND a.`p2` != 'null' AND a.`calltime` between
+		#{begin} AND #{end} AND a.`kind` = '1' and a.`sw` != ''
+	</select>
+
+	<!-- 黄页电话， during 大于0 说明已经打通了 等于0 说明没有打通 -->
+	<select id="selectCallStatYZXNotCall" resultType="CallStatExcelLog"
+		parameterType="Map">
+		SELECT
+		bc.phone caller,ac.called called,ac.calltime
+		calltime,ac.length during
+		FROM
+		p_yzx_callreq ac , p_account_yzx bc
+		WHERE
+		ac.caller = bc.clientNumber AND ac.event = 'callhangup' AND
+		ac.`calltime`
+		between #{begin} AND #{end};
+	</select>
+
+	<!-- 求购页面拨打电话记录表 -->
+	<insert id="insertQiuGouInfo" parameterType="Map">
+		insert into
+		p_call_qiugou (phone,calltime,called,request) values
+		(
+		#{phone},#{calltime},#{called},#{request}
+		)
+	</insert>
+
+	<!-- 获取拨打求购页面的电话的个数，按每人、每天统计 -->
+	<select id="selectCountQiuGouInfo" resultType="Integer"
+		parameterType="Map">
+		select count(1) from p_call_qiugou where phone =
+		#{phone} and request=#{request} and calltime >=
+		DATE_FORMAT(now(),'%Y-%m-%d')
+	</select>
+
+	<insert id="insertPersonTag" parameterType="Map">
+		insert into
+		p_person_tag(phone,corpid,name,tagdate,tagphone,callcount,alarm,alarmdate,tag,selfdata1,selfdata2,cmid)
+		values
+		<foreach collection="personTags" item="PersonTag" index="index"
+			separator=",">
+			(#{PersonTag.phone},#{PersonTag.corpid},#{PersonTag.name},#{PersonTag.tagdate},#{PersonTag.tagphone},#{PersonTag.callcount},#{PersonTag.alarm},#{PersonTag.alarmdate},#{PersonTag.tag},#{PersonTag.selfdata1},#{PersonTag.selfdata2},#{PersonTag.cmid})
+		</foreach>
+	</insert>
+	<insert id="insertPersonNewTag" parameterType="Map">
+		insert into
+		p_person_newtag(phone,corpid,name,tagdate,tagphone,callcount,alarm,alarmdate,tag,selfdata1,selfdata2,cmid)
+		values
+		<foreach collection="personTags" item="PersonTag" index="index"
+			separator=",">
+			(#{PersonTag.phone},#{PersonTag.corpid},#{PersonTag.name},#{PersonTag.tagdate},#{PersonTag.tagphone},#{PersonTag.callcount},#{PersonTag.alarm},#{PersonTag.alarmdate},#{PersonTag.tag},#{PersonTag.selfdata1},#{PersonTag.selfdata2},#{PersonTag.cmid})
+		</foreach>
+	</insert>
+	
+	<delete id="deletePersonTag" parameterType="String">
+		delete from
+		p_person_tag where phone = #{phone}
+	</delete>
+
+	<select id="selectPersonTag" parameterType="String" resultType="PersonTag">
+		select * from p_person_tag where phone = #{phone}
+	</select>
+	
+	<select id="selectPersonNewTag" parameterType="String" resultType="PersonTag">
+		select * from p_person_newtag where phone = #{phone}
+	</select>
+	
+	<select id="selectCmidcount" parameterType="String" resultType="Integer">
+		select count(1) from p_person_tag where cmid=#{cmid}
+	</select> 
+	<select id="selectCmidNewcount" parameterType="String" resultType="Integer">
+		select count(1) from p_person_newtag where cmid=#{cmid}
+	</select>
+	<select id="selectRemarkcount" parameterType="PersonTagNewRemark"
+		resultType="Integer">
+		select count(1) from p_person_tag_newremark where
+		cid=#{cid}
+		and cmid=#{cmid}
+	</select>
+	<select id="selectActioncount" parameterType="PersonTagAction"
+		resultType="Integer">
+		select count(1)FROM p_person_tag_action t where
+		t.cid=#{cid}
+		and t.cmid=#{cmid}
+	</select>
+	<select id="selectContactcount" parameterType="PersonTagNewContact"
+		resultType="Integer">
+		select count(1) FROM p_person_tag_newcontact t where
+		t.cid=#{cid} and t.cmid=#{cmid}
+	</select>
+
+	<select id="selectAllPersonTag" resultType="PersonTag">
+		SELECT * FROM p_person_tag a WHERE a.`alarmdate` is not null and
+		a.`alarmdate`
+		!= '' and (UNIX_TIMESTAMP(NOW()) - a.`alarmdate`/1000) >= -1200 and
+		a.`selfdata1`
+		= 0
+
+	</select>
+
+
+	<select id="selectAllTagAction" resultType="PersonTagAction">
+		<!-- SELECT* FROM p_person_tag_action a WHERE a.`alarmdate` is not null 
+			and a.`alarmdate` != '' and (UNIX_TIMESTAMP(NOW()) - a.`alarmdate`/1000) 
+			>= -1200 and a.`state` = 0 -->
+		select a.id,a.cmid,a.action,a.name,a.createtime,a.cid,a.alarmdate,a.state,b.corpid,b.`name`as corpname,b.phone   FROM
+		p_person_tag_action a
+		LEFT JOIN p_person_newtag
+		b on a.cmid=b.cmid
+		WHERE a.`alarmdate` is not null
+		and a.`alarmdate` != ''
+		and
+		(UNIX_TIMESTAMP(NOW()) -
+		a.`alarmdate`/1000) >= -1200 and
+		a.`state` = 0
+
+
+
+	</select>
+	<update id="updateSendAction" parameterType="Integer">
+		update
+		p_person_tag_action set
+		state = 1 where id = #{id}
+	</update>
+	<update id="updateSend" parameterType="Integer">
+		update p_person_tag set
+		selfdata1 = 1 where id = #{id}
+	</update>
+
+	<select id="isExistPersonTag" parameterType="String" resultType="Integer">
+		select count(1) from p_person_tag where phone = #{phone}
+	</select>
+
+	<insert id="insertPersonTagContact" parameterType="Map">
+		insert into p_person_tag_contact (cmid,name,phone,createtime) values
+		<foreach collection="PersonTagContacts" item="personTagContact"
+			index="index" separator=",">
+			(#{personTagContact.cmid},#{personTagContact.name},#{personTagContact.phone},#{personTagContact.createtime})
+		</foreach>
+	</insert>
+
+	<select id="selectPersonTagContact" parameterType="String"
+		resultType="PersonTagContact">
+		select * from p_person_tag_contact where cmid = #{cmid}
+	</select>
+
+	<delete id="deletePersonTagContact" parameterType="String">
+		delete from
+		p_person_tag_contact where cmid =#{cmid}
+
+	</delete>
+	<delete id="deletePersonTags" parameterType="String">
+		delete from
+		p_person_tag where cmid =#{cmid}
+
+	</delete>
+	<delete id="deletePersonNewTags" parameterType="String">
+		delete from
+		p_person_newtag where cmid =#{cmid}
+
+	</delete>
+	<insert id="insertPersonTagRemark" parameterType="Map">
+		insert into p_person_tag_remark (cmid,tagremark,createtime) values
+		<foreach collection="PersonTagRemarks" item="personTagRemark"
+			index="index" separator=",">
+			(#{personTagRemark.cmid},#{personTagRemark.tagremark},#{personTagRemark.createtime})
+		</foreach>
+	</insert>
+
+	<insert id="insertPersonTagNewRemark" parameterType="Map">
+		insert into p_person_tag_newremark
+		(cmid,tagremark,name,createtime,cid)
+		values
+		<foreach collection="PersonTagNewRemarks" item="personTagNewRemark"
+			index="index" separator=",">
+			(#{personTagNewRemark.cmid},#{personTagNewRemark.tagremark},#{personTagNewRemark.name},#{personTagNewRemark.createtime},#{personTagNewRemark.cid})
+		</foreach>
+	</insert>
+	<insert id="insertPersonTagNewContact" parameterType="Map">
+		insert into p_person_tag_newcontact (cmid,name,phone,createtime,cid)
+		values
+		<foreach collection="PersonTagNewContacts" item="personTagNewContact"
+			index="index" separator=",">
+			(#{personTagNewContact.cmid},#{personTagNewContact.name},#{personTagNewContact.phone},#{personTagNewContact.createtime},#{personTagNewContact.cid})
+		</foreach>
+	</insert>
+	<insert id="insertPersonTagAction" parameterType="Map">
+		insert into p_person_tag_action
+		(cmid,action,name,createtime,cid,phone,alarmdate,state) values
+		<foreach collection="PersonTagActions" item="PersonTagAction"
+			index="index" separator=",">
+			(#{PersonTagAction.cmid},#{PersonTagAction.action},#{PersonTagAction.name},#{PersonTagAction.createtime},#{PersonTagAction.cid},#{phone},#{PersonTagAction.alarmdate},#{PersonTagAction.state})
+		</foreach>
+	</insert>
+	<!-- 三个Tag增删改 -->
+	<insert id="insertTagAction" parameterType="PersonTagAction">
+		insert into
+		p_person_tag_action
+		(cmid,action,name,createtime,cid,phone,state,alarmdate) values
+		(#{cmid},#{action},#{name},#{createtime},#{cid},#{phone},#{state},#{alarmdate})
+	</insert>
+	<insert id="insertTagRemark" parameterType="PersonTagNewRemark">
+		insert into
+		p_person_tag_newremark (cmid,tagremark,name,createtime,cid) values
+		(#{cmid},#{tagremark},#{name},#{createtime},#{cid})
+	</insert>
+
+	<insert id="insertTagNewContact" parameterType="PersonTagNewContact">
+		insert into
+		p_person_tag_newcontact (cmid,name,phone,createtime,cid) values
+		(#{cmid},#{name},#{phone},#{createtime},#{cid})
+	</insert>
+	<!-- 增删改待办事项 -->
+	<update id="updateTagAction" parameterType="PersonTagAction">
+		update
+		p_person_tag_action set action=#{action}, name=#{name}, createtime
+		=#{createtime} where
+		cid=#{cid} and cmid = #{cmid}
+	</update>
+	<update id="updateTagRemark" parameterType="PersonTagNewRemark">
+		update
+		p_person_tag_newremark set tagremark=#{tagremark}, name=#{name},
+		createtime
+		=#{createtime} where
+		cid=#{cid} and cmid = #{cmid}
+	</update>
+	<update id="updateTagNewContact" parameterType="PersonTagContact">
+		update
+		p_person_tag_newcontact set phone=#{phone} , createtime
+		=#{createtime}
+		where cid=#{cid} and cmid = #{cmid}
+	</update>
+	<delete id="delPersonTagAction" parameterType="PersonTagAction">
+		delete from
+		p_person_tag_action where cmid =#{cmid} and cid=#{cid}
+	</delete>
+	<delete id="delTagNewRemark" parameterType="PersonTagNewRemark">
+		delete from
+		p_person_tag_newremark where cmid =#{cmid} and cid=#{cid}
+	</delete>
+	<delete id="delTagNewContact" parameterType="PersonTagNewContact">
+		delete from
+		p_person_tag_newcontact where cmid =#{cmid} and cid=#{cid}
+	</delete>
+	<!-- end -->
+	<select id="selectPersonTagRemark" parameterType="String"
+		resultType="PersonTagRemark">
+		select * from p_person_tag_remark where cmid = #{cmid}
+	</select>
+	<select id="selectPersonTagNewContact" parameterType="String"
+		resultType="PersonTagNewContact">
+		select * from p_person_tag_newcontact where cmid = #{cmid}
+	</select>
+
+	<select id="selectPersonTagNewRemark" parameterType="String"
+		resultType="PersonTagNewRemark">
+		select * from p_person_tag_newremark where cmid = #{cmid}
+	</select>
+
+	<select id="selectPersonTagAction" parameterType="String"
+		resultType="PersonTagAction">
+		select * from p_person_tag_action where cmid = #{cmid}
+	</select>
+
+	<delete id="deletePersonTagRemark" parameterType="String">
+		delete from
+		p_person_tag_remark where cmid =#{cmid}
+	</delete>
+	<delete id="deletePersonTagNewRemark" parameterType="String">
+		delete from
+		p_person_tag_newremark where cmid =#{cmid}
+	</delete>
+
+	<delete id="deletePersonTagNewContact" parameterType="String">
+		delete from
+		p_person_tag_newcontact where cmid =#{cmid}
+
+	</delete>
+	<delete id="deletePersonTagAction" parameterType="String">
+		delete from
+		p_person_tag_action where cmid =#{cmid}
+	</delete>
+
+	<insert id="insertLuckyResult" parameterType="Map">
+		insert into
+		p_phone_lucky_result(phone,marktime,actiontype,result)
+		values(#{phone},#{marktime},#{actiontype},#{result})
+	</insert>
+
+	<select id="countLuckyResult" parameterType="Map" resultType="Integer">
+		select count(1) from p_phone_lucky_result where phone = #{phone} and
+		actiontype=#{actiontype}
+	</select>
+
+	<insert id="insertPush" parameterType="PushClientInfo">
+		insert into
+		p_push_client_info (phone,token,ticker,createtime) values(
+		#{phone},#{token},#{ticker},NOW())
+	</insert>
+
+	<delete id="delPushByPhone" parameterType="String">
+		delete from
+		p_push_client_info where phone = #{phone}
+	</delete>
+
+	<select id="selectPushByPhone" resultType="PushClientInfo">
+		select phone,token,ticker,createtime from
+		p_push_client_info where phone = #{phone}
+	</select>
+	<select id="getPushCilentInfoList" resultType="PushClientInfo">
+		select phone,token,ticker,createtime from p_push_client_info where token IS NOT NULL
+	</select>
+	
+	<update id="updatePushClientInfo">
+		UPDATE p_push_client_info
+		SET token = #{token},createtime = NOW()
+		<if test="ticker!=null and ticker!=''">
+			,ticker = #{ticker}
+		</if>
+		WHERE phone = #{phone}
+	</update>
+	
+	<update id="deletePushClientInfoByPhone">
+		DELETE FROM p_push_client_info WHERE phone = #{phone}
+	</update>
+	
+	<update id="updatePushClientInfoTokenNull">
+		UPDATE p_push_client_info
+		SET token = null,createtime = NOW()
+		WHERE token = #{token}
+	</update>
+
+	<select id="selectPhoneBalanceZero" resultType="AccountYzx">
+		select
+		phone,clientNumber,clientPwd from p_account_yzx where balance = '0'
+	</select>
+
+	<select id="getCorpofHome" parameterType="String"
+		resultType="SpringFestivalActivity">
+		select
+		city,yycount,schoolc,shopingc ,taxic,factoryc
+		,ecount,gtcount,cropcount ,peoplecounts, pm1,czcounts,pm2 ,amounts
+		,pm3,gdpavg ,pm4,area,pm5,houseprice, pm6 , cityname,qh ,
+		avgamount1
+		,avgamount2 ,frd,remark,remark1,remark2,remark3,remark4,remark5 from
+		spring_festival_activity where
+		city=#{city}
+	</select>
+
+	<select id="updateTaxic" parameterType="String">
+		UPDATE
+		spring_festival_activity SET taxic = taxic+1 WHERE city=#{city}
+	</select>
+
+	<select id="getTaxicTop" resultType="SpringFestivalActivity">
+		SELECT city,taxic FROM
+		spring_festival_activity ORDER BY taxic DESC LIMIT 0,3
+	</select>
+
+	<insert id="insertFinalTime" parameterType="SpringFestivalActivity">
+		insert into
+		p_final_time_log (phonenum,deviceid,finaltime) values(
+		#{phonenum},#{deviceid},#{finaltime})
+	</insert>
+
+	<select id="getDeviceid" parameterType="Map" resultType="String">
+		select
+		deviceid from p_final_time_log where deviceid=#{deviceid} and
+		phonenum=#{phonenum}
+	</select>
+
+	<update id="updateFinalTime" parameterType="SpringFestivalActivity">
+		update
+		p_final_time_log
+		set finaltime =#{finaltime},phonenum=#{phonenum}
+
+		where
+		deviceid = #{deviceid} and phonenum=#{phonenum}
+	</update>
+
+	<select id="getHotWord" resultType="HotWord">
+		select * from hot_word_ext
+		where enable = 1 order by type
+	</select>
+
+	<!-- 查询图片 time 倒计时 keywords关键字 -->
+	<select id="selectPicture" resultType="NewsAndMsg"
+		parameterType="Map">
+		select msgurl,time,keywords,msgpic,msgtitle from p_account_news_msg
+		where 1=1
+		<if test="type != null">
+			and type=#{type}
+		</if>
+		<if test="keywords != null">
+			AND keywords=#{keywords}
+		</if>
+		ORDER BY msgtime DESC limit 0,1
+	</select>
+	<!-- 默认图 remark2=0代表默认图 -->
+	<select id="selectAutoPicture" resultType="NewsAndMsg">
+		select
+		msgurl,time,keywords,msgpic,msgtitle from p_account_news_msg where
+		type=2 and remark2=0 limit 0,1
+	</select>
+	<!-- 查询新闻列表 -->
+	<select id="selectNewsInfo" resultType="NewsAndMsg"
+		parameterType="Map">
+		select
+		id
+		newsId,msgTime,msgTitle,msgPic,msgDesc,msgurl,remark1 from
+		p_account_news_msg where
+		type=#{type}
+		order by msgTime desc limit
+		#{begin},#{end}
+	</select>
+	<!-- 查询新闻列表 -->
+	<select id="selectNewsInfoById" resultType="NewsAndMsg"
+		parameterType="java.lang.Integer">
+		select
+		msgTime,msgTitle,msgPic,msgDesc,msgurl,remark1
+		from
+		p_account_news_msg where
+		id=#{newsId}
+	</select>
+	<!-- 查询最新标题 -->
+	<select id="selectNewsTitle" resultType="NewsAndMsg">
+		select
+		msgtitle,msgurl,type from p_account_news_msg where(msgTime in(select
+		max(msgTime)
+		from p_account_news_msg where type in (3,4,5) group by
+		type))
+
+	</select>
+	<select id="selectNewsCount" resultType="NewsAndMsg">
+		select id newsId,
+		count(*) count,type from p_account_news_msg where type in
+		(3,4,5) group
+		by type
+
+	</select>
+	<insert id="insertNewsInfo" useGeneratedKeys="true" keyProperty="newsId"
+		parameterType="NewsAndMsg">
+		insert into
+		p_account_news_msg( type , msgTime , msgTitle
+		, msgPic , msgDesc,time,
+		msgUrl,remark1)
+		values
+		(#{type},#{msgTime},#{msgTitle},#{msgPic},#{msgDesc},#{time},#{msgUrl},#{remark1})
+	</insert>
+	<update id="updateNewsInfo" parameterType="NewsAndMsg">
+		UPDATE p_account_news_msg
+		<set>
+			<if test="type != null and type != ''">
+				type=#{type},
+			</if>
+			<if test="msgTime != null and msgTime != ''">
+				msgTime=#{msgTime},
+			</if>
+			<if test="msgTitle != null and msgTitle != ''">
+				msgTitle=#{msgTitle},
+			</if>
+			<if test="msgPic != null and msgPic != ''">
+				msgPic=#{msgPic},
+			</if>
+			<if test="msgDesc != null and msgDesc != ''">
+				msgDesc=#{msgDesc},
+			</if>
+			<if test="msgUrl != null and msgUrl != ''">
+				msgUrl=#{msgUrl},
+			</if>
+		</set>
+		WHERE
+		id = #{newsId}
+	</update>
+	<delete id="delNewsInfo" parameterType="java.lang.Integer">
+		delete from
+		p_account_news_msg where id = #{newsId}
+	</delete>
+</mapper>

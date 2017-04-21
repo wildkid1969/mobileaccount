@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.AdMapper">
+
+	<resultMap id="Ad" type="com.hc360.mobileaccount.po.Ad">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="imgUrl" column="img_url"/>
+        <result property="goUrl" column="go_url"/>
+        <result property="objectid" column="objectid"/>
+        <result property="createtime" column="createtime"/>
+        <result property="type" column="type"/>
+        <result property="state" column="state"/>
+        <result property="sort" column="sort"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,name,description,img_url,go_url,objectid,createtime,type,state,sort
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_ad (
+        	id ,
+        	name ,
+        	description ,
+        	img_url ,
+        	go_url ,
+        	objectid,
+        	createtime ,
+        	type ,
+        	state ,
+        	sort 
+        ) VALUES (
+        	#{id},
+         	#{name},
+         	#{description},
+         	#{imgUrl},
+         	#{goUrl},
+         	#{objectid},
+         	NOW(),
+         	#{type},
+         	#{state},
+         	#{sort}
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_ad
+        <set>
+			<if test="name != null and name != ''">
+	        	name = #{name} ,
+	        </if>
+			<if test="description != null and description != ''">
+	        	description = #{description} ,
+	        </if>
+			<if test="imgUrl != null and imgUrl != ''">
+	        	img_url = #{imgUrl} ,
+	        </if>
+			<if test="goUrl != null and goUrl != ''">
+	        	go_url = #{goUrl} ,
+	        </if>
+			<if test="objectid != null and objectid != ''">
+	        	objectid = #{objectid} ,
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	createtime = #{createtime} ,
+	        </if>
+			<if test="type != null and type != ''">
+	        	type = #{type} ,
+	        </if>
+			<if test="state != null">
+	        	state = #{state} ,
+	        </if>
+			<if test="sort != null and sort != ''">
+	        	sort = #{sort} 
+	        </if>
+	    </set>
+        WHERE 
+	        id = #{id} 
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_ad WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="Ad">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_ad 
+	        WHERE 
+		        id = #{id} 
+	    ]]>
+	</select>
+		
+    <select id="getAdList" resultMap="Ad">
+    	SELECT <include refid="columns" />
+	    FROM sp_ad 
+	    <where>
+			<if test="type != null and type != ''">
+	        	and type = #{type}
+	        </if>
+			<if test="state != null and state != ''">
+	        	and state = #{state}
+	        </if>
+	        <if test="types != null and types != ''">
+	        	and type in 
+	        	<foreach item="item" index="index" collection="types" open="(" separator="," close=")">  
+				 	#{item}  
+				</foreach> 
+	        </if>
+	    </where>
+	    ORDER BY sort
+    </select>
+
+	
+</mapper>
+

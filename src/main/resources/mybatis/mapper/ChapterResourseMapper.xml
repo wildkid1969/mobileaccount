@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.ChapterResourseMapper">
+
+	<resultMap id="ChapterResourse" type="com.hc360.mobileaccount.po.ChapterResourse">
+        <result property="id" column="id"/>
+        <result property="chapterid" column="chapterid"/>
+        <result property="resourceid" column="resourceid"/>
+        <result property="type" column="type"/>
+	</resultMap>
+	
+	<resultMap id="Video" type="com.hc360.mobileaccount.po.Video">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="timeLength" column="time_length"/>
+        <result property="sdUrl" column="sd_url"/>
+        <result property="hdUrl" column="hd_url"/>
+        <result property="shdUrl" column="shd_url"/>
+        <result property="playCnt" column="play_cnt"/>
+        <result property="videofrom" column="videofrom"/>
+	</resultMap>
+	
+	<resultMap id="Audio" type="com.hc360.mobileaccount.po.Audio">
+        <result property="id" column="id"/>
+        <result property="url" column="url"/>
+        <result property="description" column="description"/>
+        <result property="timeLength" column="time_length"/>
+        <result property="createtime" column="createtime"/>
+        <result property="labelids" column="labelids"/>
+        <result property="imgUrl" column="img_url"/>
+        <result property="labelnames" column="labelnames"/>
+        <result property="playCnt" column="play_cnt"/>
+	</resultMap>
+	
+	<resultMap id="Picture" type="com.hc360.mobileaccount.po.Picture">
+        <result property="id" column="id"/>
+        <result property="url" column="url"/>
+        <result property="createtime" column="createtime"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,chapterid,resourceid,type
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_chapter_resourse (
+        	id ,
+        	chapterid ,
+        	resourceid ,
+        	type 
+        ) VALUES (
+        	#{id} ,
+        	#{chapterid} ,
+        	#{resourceid} ,
+        	#{type} 
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+    <![CDATA[
+        UPDATE sp_chapter_resourse SET
+	        chapterid = #{chapterid} ,
+	        resourceid = #{resourceid} ,
+	        type = #{type} 
+        WHERE 
+	        id = #{id} 
+    ]]>
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_chapter_resourse WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="ChapterResourse">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_chapter_resourse 
+	        WHERE 
+		        id = #{id} 
+	    ]]>
+	</select>
+		
+    <select id="findPage_count" resultType="long">
+        SELECT count(*) FROM sp_chapter_resourse 
+    </select>
+    
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 offset,pageSize,lastRows 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="getChapterVideo" resultMap="Video">
+    	SELECT v.* FROM sp_chapter_resourse cr 
+		LEFT JOIN sp_video v ON v.id = cr.resourceid
+		WHERE cr.chapterid=#{chapterid} and type = 1
+    </select>
+    
+    
+    <select id="getChapterAudioList" resultMap="Audio">
+    	SELECT a.* FROM sp_chapter_resourse cr 
+		LEFT JOIN sp_audio a ON a.id = cr.resourceid
+		WHERE cr.chapterid=#{chapterid} and type = 2
+    </select>
+    
+    <select id="getChapterPictureList" resultMap="Picture">
+    	SELECT p.* FROM sp_chapter_resourse cr 
+		LEFT JOIN sp_picture p ON p.id = cr.resourceid
+		WHERE cr.chapterid=#{chapterid} and type = 3
+    </select>
+
+</mapper>
+

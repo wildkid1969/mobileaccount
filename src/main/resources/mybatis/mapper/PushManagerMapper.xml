@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.PushManagerMapper">
+
+	<resultMap id="PushManager" type="com.hc360.mobileaccount.po.PushManager">
+        <result property="pushManagerId" column="push_manager_id"/>
+        <result property="fromPhone" column="from_phone"/>
+        <result property="toPhone" column="to_phone"/>
+        <result property="ticker" column="ticker"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="objectid" column="objectid"/>
+        <result property="type" column="type"/>
+        <result property="appActivity" column="app_activity"/>
+        <result property="createtime" column="createtime"/>
+        <result property="pushtime" column="pushtime"/>
+        <result property="pushType" column="push_type"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			push_manager_id,from_phone,to_phone,ticker,title,content,objectid,type,app_activity,createtime,pushtime,push_type
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="pushManagerId">
+    <![CDATA[
+        INSERT INTO sp_push_manager (
+        	push_manager_id ,
+        	from_phone ,
+        	to_phone ,
+        	ticker ,
+        	title ,
+        	content ,
+        	objectid ,
+        	type ,
+        	app_activity ,
+        	createtime ,
+        	pushtime ,
+        	push_type 
+        ) VALUES (
+         	#{pushManagerId},
+         	#{fromPhone},
+         	#{toPhone},
+         	#{ticker},
+         	#{title},
+         	#{content},
+         	#{objectid},
+         	#{type},
+         	#{appActivity},
+         	NOW(),
+         	NOW(),
+         	#{pushType}
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_push_manager
+        <set>
+			<if test="fromPhone != null and fromPhone != ''">
+	        	from_phone = #{fromPhone} ,
+	        </if>
+			<if test="toPhone != null and toPhone != ''">
+	        	to_phone = #{toPhone} ,
+	        </if>
+			<if test="ticker != null and ticker != ''">
+	        	ticker = #{ticker} ,
+	        </if>
+			<if test="title != null and title != ''">
+	        	title = #{title} ,
+	        </if>
+			<if test="content != null and content != ''">
+	        	content = #{content} ,
+	        </if>
+			<if test="objectid != null and objectid != ''">
+	        	objectid = #{objectid} ,
+	        </if>
+			<if test="type != null and type != ''">
+	        	type = #{type} ,
+	        </if>
+			<if test="appActivity != null and appActivity != ''">
+	        	app_activity = #{appActivity} ,
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	createtime = #{createtime} ,
+	        </if>
+			<if test="pushtime != null and pushtime != ''">
+	        	pushtime = #{pushtime} ,
+	        </if>
+			<if test="pushType != null and pushType != ''">
+	        	push_type = #{pushType} 
+	        </if>
+	    </set>
+        WHERE 
+	        push_manager_id = #{pushManagerId} 
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_push_manager WHERE
+        push_manager_id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="PushManager">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_push_manager 
+	        WHERE 
+		        push_manager_id = #{id} 
+	    ]]>
+	</select>
+		
+    <select id="getPushManagerList" resultMap="PushManager">
+    	SELECT <include refid="columns" />
+	    FROM sp_push_manager 
+	    where date(pushtime) = date(NOW())
+			<if test="fromPhone != null and fromPhone != ''">
+	        	and from_phone = #{fromPhone}
+	        </if>
+			<if test="toPhone != null and toPhone != ''">
+	        	and to_phone = #{toPhone}
+	        </if>
+			<if test="ticker != null and ticker != ''">
+	        	and ticker = #{ticker}
+	        </if>
+			<if test="title != null and title != ''">
+	        	and title = #{title}
+	        </if>
+			<if test="content != null and content != ''">
+	        	and content = #{content}
+	        </if>
+			<if test="objectid != null and objectid != ''">
+	        	and objectid = #{objectid}
+	        </if>
+			<if test="type != null and type != ''">
+	        	and type = #{type}
+	        </if>
+			<if test="appActivity != null and appActivity != ''">
+	        	and app_activity = #{appActivity}
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	and createtime = #{createtime}
+	        </if>
+			<if test="pushType != null and pushType != ''">
+	        	and push_type = #{pushType}
+	        </if>
+    </select>
+
+	
+</mapper>
+

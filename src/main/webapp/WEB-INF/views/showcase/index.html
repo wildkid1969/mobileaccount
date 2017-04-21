@@ -1,0 +1,124 @@
+
+
+<div class="panel panel-info">
+  <div class="panel-heading">
+    <h3 class="panel-title">服务端返回内容：</h3>
+  </div>
+  <div id="console" class="panel-body">
+  </div>
+</div>
+
+
+<!-- Nav tabs -->
+<ul class="nav nav-tabs">
+  <li class="active"><a href="#mapping" data-toggle="tab">请求映射</a></li>
+  <li><a href="#binding" data-toggle="tab">数据绑定</a></li>
+  <li><a href="#validation" data-toggle="tab">数据校验</a></li>
+  <li><a href="#returnTypes" data-toggle="tab">返回视图</a></li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content">
+  <div class="tab-pane active" id="mapping">
+	<h3>Request Mapping : </h3>
+    <ul>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/mapping/method1',success:function(data){jQuery('#console').html(data);}});">URL Path : /mapping/method1  </a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'POST', url:'$rc.contextPath/mapping/method1',success:function(data){jQuery('#console').html(data);}});">URL Path  : /mapping/method1  (POST)</a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/mapping/placeholder/aaaaa',success:function(data){jQuery('#console').html(data);}});">URL Path使用占位符  : /mapping/placeholder/aaaaa</a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/mapping/wildcard/a/b/cccabc',success:function(data){jQuery('#console').html(data);}});">URL Path使用通配符(ant style)  : /mapping/wildcard/a/b/cccabc</a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/mapping/regex/123123',success:function(data){jQuery('#console').html(data);}});">URL Path正则表达式  : /mapping/regex/123123</a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/mapping/method2',success:function(data){jQuery('#console').html(data);}});">指定HTTP Method : /mapping/method2  </a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/mapping/method3?param1=xxx',success:function(data){jQuery('#console').html(data);}});">必须包含指定参数 : /mapping/method3?param1=xxx  </a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', contentType: 'text/plain;charset=GBK', url:'$rc.contextPath/mapping/method4',success:function(data){jQuery('#console').html(data);}});">指定Request的Content-Type : /mapping/method4  </a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/mapping/method5',dataType:'json',success:function(data){jQuery('#console').html(data.mapping + '姓名：' + data.name + '，年龄:' + data.age);}});">指定Response的Content-Type : /mapping/method5  </a>
+        </li>
+    
+    </ul>
+  </div>
+  
+  <div class="tab-pane" id="binding">
+	
+    <h3>Data Binding : </h3>
+    <ul>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/binding/pathVariable/a/123abc',success:function(data){jQuery('#console').html(data);}});">获取URL中的数据 : /binding/pathVariable/a/123abc  </a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/binding/requestParameter?cat1=a&cat2=123abc',success:function(data){jQuery('#console').html(data);}});">获取请求参数 : /binding/requestParameter?cat1=a&cat2=123abc  </a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/binding/requestHeader',success:function(data){jQuery('#console').html(data);}});">获取请求头信息 : /binding/requestHeader  </a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'POST', data: 'name=Tom', url:'$rc.contextPath/binding/requestBody',success:function(data){jQuery('#console').html(data);}});">获取请求内容: /binding/requestBody  </a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.cookie('cookie1', 'value1');jQuery.ajax({type:'GET', url:'$rc.contextPath/binding/cookie',success:function(data){jQuery('#console').html(data);}});">获取cookie信息 : /binding/cookie  </a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/binding/pojo?name=tom&age=22',success:function(data){jQuery('#console').html(data);}});">将请求中的参数绑定到pojo中 : /binding/pojo?name=tom&age=22  </a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/binding/arguments',success:function(data){jQuery('#console').html(data);}});">支持的其他参数: /binding/arguments  </a>
+        </li>
+    </ul>
+  
+  </div>
+  
+  <div class="tab-pane" id="validation">
+	<h3>Validation : </h3>
+    <ul>
+        <li>
+        <a href="$rc.contextPath/validation/userForm">数据校验: /validation/userForm</a>
+        </li>
+    </ul>
+  </div>
+  
+  
+  <div class="tab-pane" id="returnTypes">
+	<h3>Return Types : </h3>
+    <ul>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/showcase/returntype/velocityView',success:function(data){jQuery('#console').html(data);}});">Velocity 视图: /showcase/returntype/velocityView</a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/showcase/returntype/jspView',success:function(data){jQuery('#console').html(data);}});">Jsp 视图: /showcase/returntype/jspView</a>
+        </li>
+        <li>
+        <a href="$rc.contextPath/showcase/returntype/redirect">重定向: /showcase/redirect</a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/showcase/returntype/textView',success:function(data){jQuery('#console').html(data);}});">返回文本(@ResponseBody): /showcase/returntype/textView</a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/showcase/returntype/jsonView',success:function(data){jQuery('#console').html(JSON.stringify(data));}});">返回Json(@ResponseBody): /showcase/returntype/jsonView</a>
+        </li>
+        <li>
+        <a href="$rc.contextPath/showcase/returntype/pdfView">Pdf 视图: /showcase/pdfView</a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/showcase/returntype/list',success:function(data){jQuery('#console').html(data);}});">返回集合: /showcase/returntype/list</a>
+        </li>
+        <li>
+        <a href="javascript:void(0);" onclick="jQuery.ajax({type:'GET', url:'$rc.contextPath/showcase/returntype/map',success:function(data){jQuery('#console').html(data);}});">返回Map: /showcase/returntype/map</a>
+        </li>
+    </ul>
+  </div>
+</div>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.UserNcourseMapper">
+
+	<resultMap id="UserNcourse" type="com.hc360.mobileaccount.po.UserNcourse">
+        <result property="id" column="id"/>
+        <result property="userid" column="userid"/>
+        <result property="courseid" column="courseid"/>
+        <result property="subtime" column="subtime"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,userid,courseid,subtime
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_user_n_course (
+        	id ,
+        	userid ,
+        	courseid ,
+        	subtime 
+        ) VALUES (
+        	#{id} ,
+        	#{userid} ,
+        	#{courseid} ,
+        	NOW()
+        )
+    ]]>
+    
+    
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+	
+	
+	<insert id="subcribeTeacherAllCourses" parameterType="List">
+		INSERT INTO sp_user_n_course (userid,courseid,subtime) 
+		 VALUES 
+		 <foreach collection="list" item="item" index="index" separator="," >  
+       		 (#{item.userid},#{item.courseid},NOW())  
+    	 </foreach> 
+	</insert>
+	
+	<insert id="unsubcribeTeacherAllCourses" parameterType="List">
+		DELETE FROM sp_user_n_course WHERE userid = #{userid}
+		AND courseid in 
+		 <foreach collection="courseidList" item="item" index="index" open="(" separator="," close=")" >  
+       		 #{item}
+    	 </foreach> 
+	</insert>
+    
+	<update id="update" >
+    <![CDATA[
+        UPDATE sp_user_n_course SET
+	        userid = #{userid} ,
+	        courseid = #{courseid} ,
+	        subtime = #{subtime} 
+        WHERE 
+	        id = #{id} 
+    ]]>
+	</update>
+
+    <delete id="delete">
+        DELETE FROM sp_user_n_course 
+        <where>
+			<if test="userid != null and userid != ''">
+	        	and userid = #{userid}
+	        </if>
+			<if test="courseid != null and courseid != ''">
+	        	and courseid = #{courseid}
+	        </if>
+	    </where> 
+    </delete>
+    
+    <select id="getById" resultMap="UserNcourse">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_user_n_course 
+	        WHERE 
+		        id = #{id} 
+	    ]]>
+	</select>
+		
+    
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 offset,pageSize,lastRows 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="getUserNCourseIds" resultType="Long">
+	    SELECT c.id FROM sp_course c
+		LEFT JOIN sp_user_n_course unc ON unc.courseid = c.id
+		WHERE unc.userid = #{userid} AND c.`enable`=1
+		AND EXISTS (SELECT courseid FROM sp_course_chapter cc WHERE c.id=cc.courseid and cc.enable=1 )
+    </select>
+	
+</mapper>
+

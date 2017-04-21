@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.OfflineTeacherMapper">
+
+	<resultMap id="OfflineTeacher" type="com.hc360.mobileaccount.po.OfflineTeacher">
+        <result property="teacherid" column="teacherid"/>
+        <result property="name" column="name"/>
+        <result property="avatar" column="avatar"/>
+        <result property="position" column="position"/>
+        <result property="description" column="description"/>
+        <result property="videoKey" column="video_key"/>
+        <result property="timeLength" column="time_length"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			teacherid,name,avatar,position,description,video_key,time_length
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="teacherid">
+    <![CDATA[
+        INSERT INTO sp_offline_teacher (
+        	teacherid ,
+        	name ,
+        	avatar ,
+        	position ,
+        	description ,
+        	video_key ,
+        	time_length 
+        ) VALUES (
+         	#{teacherid},
+         	#{name},
+         	#{avatar},
+         	#{position},
+         	#{description},
+         	#{videoKey},
+         	#{timeLength}
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_offline_teacher
+        <set>
+			<if test="name != null and name != ''">
+	        	name = #{name} ,
+	        </if>
+			<if test="avatar != null and avatar != ''">
+	        	avatar = #{avatar} ,
+	        </if>
+			<if test="position != null and position != ''">
+	        	position = #{position} ,
+	        </if>
+			<if test="description != null and description != ''">
+	        	description = #{description} ,
+	        </if>
+			<if test="videoKey != null and videoKey != ''">
+	        	video_key = #{videoKey} ,
+	        </if>
+			<if test="timeLength != null and timeLength != ''">
+	        	time_length = #{timeLength} 
+	        </if>
+	    </set>
+        WHERE 
+	        teacherid = #{teacherid} 
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_offline_teacher WHERE
+        teacherid = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="OfflineTeacher">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_offline_teacher 
+	        WHERE 
+		        teacherid = #{id} 
+	    ]]>
+	</select>
+		
+    <select id="getOfflineTeacherList" resultMap="OfflineTeacher">
+    	SELECT <include refid="columns" />
+	    FROM sp_offline_teacher 
+	    <where>
+			<if test="name != null and name != ''">
+	        	and name = #{name}
+	        </if>
+			<if test="avatar != null and avatar != ''">
+	        	and avatar = #{avatar}
+	        </if>
+			<if test="position != null and position != ''">
+	        	and position = #{position}
+	        </if>
+			<if test="description != null and description != ''">
+	        	and description = #{description}
+	        </if>
+			<if test="videoKey != null and videoKey != ''">
+	        	and video_key = #{videoKey}
+	        </if>
+			<if test="timeLength != null and timeLength != ''">
+	        	and time_length = #{timeLength}
+	        </if>
+	    </where>
+    </select>
+
+	
+</mapper>
+

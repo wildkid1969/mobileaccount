@@ -1,0 +1,639 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hc360.mobileaccount.dao.SaleTeacherMapper">
+
+
+	<resultMap id="Teacher" type="com.hc360.mobileaccount.po.Teacher">
+        <result property="id" column="id"/>
+        <result property="userid" column="userid"/>
+        <result property="username" column="username"/>
+        <result property="imgUrl" column="img_url"/>
+        <result property="description" column="description"/>
+        <result property="labelids" column="labelids"/>
+        <result property="labelnames" column="labelnames"/>
+        
+        <result property="fans" column="fans"/>
+        <result property="coursecnt" column="coursecnt"/>
+	</resultMap>
+	
+	
+	<resultMap id="UserQuestion" type="com.hc360.mobileaccount.po.UserQuestion">
+        <result property="id" column="id"/>
+        <result property="userid" column="userid"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="createtime" column="createtime"/>
+        <result property="praiseCnt" column="praise_cnt"/>
+        <result property="audioUrl" column="audio_url"/>
+        <result property="timeLength" column="time_length"/>
+        <result property="labelids" column="labelids"/>
+        <result property="labelnames" column="labelnames"/>
+        
+        <result property="nickname" column="nickname"/>
+        <result property="headerimg" column="headerimg"/>
+        <result property="corpname" column="corpname"/>
+	</resultMap>
+	
+	<resultMap id="TeacherReplyInvited" type="com.hc360.mobileaccount.po.TeacherReplyInvited">
+        <result property="id" column="id"/>
+        <result property="userid" column="userid"/>
+        <result property="invitedid" column="invitedid"/>
+        <result property="createtime" column="createtime"/>
+        <result property="isReply" column="is_reply"/>
+        <result property="type" column="type"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,userid,username,img_url,description,labelids,labelnames
+	    ]]>
+	</sql>
+	
+	
+		<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insertTeacher" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_teacher (
+        	id ,
+        	userid ,
+        	username ,
+        	img_url ,
+        	description ,
+        	labelids ,
+        	labelnames 
+        ) VALUES (
+         	#{id},
+         	#{userid},
+         	#{username},
+         	#{imgUrl},
+         	#{description},
+         	#{labelids},
+         	#{labelnames}
+        )
+    ]]>
+	</insert>
+	
+	<select id="getById" resultType="Teacher">
+		SELECT <include refid="columns" /> FROM sp_teacher
+	   	WHERE id = #{id} 
+	</select>
+	
+	<update id="updateTeacher" >
+        UPDATE sp_teacher
+        <set>
+			<if test="userid != null and userid != ''">
+	        	userid = #{userid} ,
+	        </if>
+			<if test="username != null and username != ''">
+	        	username = #{username} ,
+	        </if>
+			<if test="imgUrl != null and imgUrl != ''">
+	        	img_url = #{imgUrl} ,
+	        </if>
+			<if test="description != null and description != ''">
+	        	description = #{description} ,
+	        </if>
+			<if test="labelids != null and labelids != ''">
+	        	labelids = #{labelids} ,
+	        </if>
+			<if test="labelnames != null and labelnames != ''">
+	        	labelnames = #{labelnames} 
+	        </if>
+	    </set>
+        WHERE 
+	        id = #{id} 
+	</update>
+	
+	
+	<select id="getByUserId" resultMap="Teacher">
+	   	SELECT t.*,if(a.fans>0,a.fans,0) fans,if(b.coursecnt>0,b.coursecnt,0) coursecnt FROM sp_teacher t
+		LEFT JOIN(
+			SELECT count(1) fans,concern_userid FROM sp_user_concern where concern_userid=#{userId} 
+		)a ON t.userid = a.concern_userid
+		LEFT JOIN(
+			SELECT count(1) coursecnt,userid from sp_teacher_n_course where userid=#{userId} 
+		)b ON b.userid=t.userid
+		WHERE t.userid=#{userId} 
+	</select>
+	
+	<select id="getTeacherIdsByLabelId" resultType="Long">
+		SELECT id FROM sp_teacher 
+		WHERE labelids like CONCAT('%',#{labelId},'%' )
+		LIMIT 20
+	</select>
+	
+	<select id="getAllTeacherIds" resultType="Long">
+		SELECT userid FROM sp_teacher
+	</select>
+	
+	<insert id="batchInsertTeacherReplyInvited" parameterType="List">
+		 INSERT INTO sp_teacher_reply_invited (userid,invitedid,createtime,is_reply,type) 
+		 VALUES 
+		 <foreach collection="list" item="item" index="index" separator="," >  
+       		 (#{item.userid},#{item.invitedid},NOW(),0,#{item.type})  
+    	 </foreach> 
+	</insert>
+	
+	<insert id="insertIntoUserSubscribeTeacher" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO sp_user_subscribe_teacher (
+        	id ,
+        	userid ,
+        	teacherid ,
+        	subtime 
+        ) VALUES (
+         	#{id},
+         	#{userid},
+         	#{teacherid},
+         	NOW()
+        )
+	</insert>
+	
+	<select id="unsubscribeTeacher">
+		DELETE FROM sp_user_subscribe_teacher WHERE userid = #{userid} AND teacherid = #{teacherid}
+	</select>
+	<select id="getTeacherCourseIds" resultType="Long">
+		SELECT courseid FROM sp_teacher_n_course WHERE userid = #{userid}
+	</select>
+	
+	<select id="isSubscribeTeacher" resultType="Integer">
+		SELECT count(1) FROM sp_user_subscribe_teacher 
+		WHERE userid = #{userid} AND teacherid = #{teacherid}
+	</select>
+	
+	<select id="getSubUserIds" resultType="Long">
+		SELECT userid FROM sp_user_subscribe_teacher 
+		WHERE teacherid = #{teacherid}
+	</select>
+	
+	
+	
+	
+	<select id="getCommentCount" parameterType="Long" resultType="Integer">
+		select count(*) from sp_teacher_n_course a left join sp_course b on a.courseid=b.id left join sp_course_n_comment c on b.id=c.courseid where a.userid=#{userID} and b.enable=1
+	</select>
+
+	<select id="getFansCount" parameterType="Long" resultType="Integer">
+		select count(t.userid) from
+		(
+			(select distinct userid from sp_user_subscribe_teacher where teacherid =  #{userID})
+			union
+			(select distinct c.userid from sp_teacher_n_course a left join sp_course b on a.courseid=b.id left join sp_user_n_course c on b.id=c.courseid where a.userid=#{userID} and b.enable=1)
+		) t
+	</select>
+
+	<select id="getCourseList" parameterType="Long" resultType="Course">
+		select b.*,d.id as gradeId,d.name as gradeName from sp_teacher_n_course a left join sp_course b on a.courseid=b.id left join sp_grade_n_course c on b.id=c.courseid left join sp_grade d on c.gradeid=d.id where a.userid=#{userID} and b.enable=1 order by createtime desc
+	</select>
+
+	<select id="getCourseById" parameterType="Long" resultType="Course">
+		select a.*,c.id as gradeId,c.name as gradeName from sp_course a left join sp_grade_n_course b on a.id=b.courseid left join sp_grade c on b.gradeid=c.id where a.id = #{courseID} and a.enable=1
+	</select>
+
+	<update id="editCourse" parameterType="Course">
+		update 
+			sp_course 
+		set
+			name = #{name},
+			description = #{description},
+			labelids = #{labelids},
+			labelnames = #{labelNames},
+			cover_url = #{coverUrl},
+			type=#{type}
+		where
+			id =  #{id} and enable = 1
+	</update>
+
+	<update id="editCourseGrade" parameterType="Course">
+		update 
+			sp_grade_n_course 
+		set
+			gradeid = #{gradeId}
+		where
+			courseid =  #{id}
+	</update>
+
+	<insert id="addCourseGrade" parameterType="Map">
+		insert into sp_grade_n_course (gradeid,courseid) values (#{gradeId},#{courseID})
+	</insert>
+
+	<update id="delCourse" parameterType="Integer">
+		update 
+			sp_course 
+		set
+			enable = 0
+		where
+			id =  #{courseID}
+	</update>
+
+	<insert id="addCourse" useGeneratedKeys="true" keyProperty="id"  parameterType="Course">
+		insert into sp_course (name,description,labelids,labelnames,cover_url,type,createtime,enable) values (#{name},#{description},#{labelids},#{labelNames},#{coverUrl},#{type},now(),1)
+	</insert>
+
+	<insert id="addTeacherCourse" parameterType="Map">
+		insert into sp_teacher_n_course (userid,courseid) values (#{userID},#{courseID})
+	</insert>
+
+	<update id="delCourseChapter" parameterType="Integer">
+		update 
+			sp_course_chapter 
+		set
+			enable = 0
+		where
+			courseid =  #{courseID}
+	</update>
+
+	<select id="getCourseChapter" parameterType="long" resultType="CourseChapter">
+		select a.*,b.name as courseName from sp_course_chapter a left join sp_course b on a.courseid=b.id where a.id = #{chapterID} and a.enable = 1 and b.enable=1
+	</select>
+
+	<update id="editCourseChapter" parameterType="CourseChapter">
+		update
+			sp_course_chapter
+		set
+			name = #{name},
+			courseid = #{courseid},
+			labelids = #{labelids},
+			labelnames = #{labelnames},
+			cover_url = #{coverUrl}
+		where
+			id = #{id}
+	</update>
+
+	<insert id="addCourseChapter" useGeneratedKeys="true" keyProperty="id" parameterType="CourseChapter">
+		insert into sp_course_chapter (name,cover_url,courseid,labelids,labelnames,type,enable) values (#{name},#{coverUrl},#{courseid},#{labelids},#{labelnames},#{type},1)
+	</insert>
+
+	<insert id="addAudio" useGeneratedKeys="true" keyProperty="id"  parameterType="Audio">
+		insert into sp_audio(url,description,time_length,createtime,labelids,labelnames,img_url) values(#{url},#{description},#{timeLength},now(),#{labelids},#{labelnames},#{imgUrl})
+	</insert>
+
+	<insert id="addVideo" useGeneratedKeys="true" keyProperty="id"  parameterType="Video">
+		insert into sp_video (name,time_length,img_url,sd_url,shd_url,hd_url,videofrom) values (#{name},#{timeLength},#{imgUrl},#{sdUrl},#{shdUrl},#{hdUrl},#{videofrom})
+	</insert>
+
+	<insert id="addPicture" useGeneratedKeys="true" keyProperty="id"  parameterType="Picture">
+		insert into sp_picture (url,createtime) values(#{url},now())
+	</insert>
+
+	<insert id="addResourse" parameterType="Map">
+		insert into sp_chapter_resourse (chapterid,resourceid,type) values (#{chapterid},#{resourceid},#{type})
+	</insert>
+
+	<delete id="delAudio" parameterType="Long">
+		delete from sp_audio where id=#{id}
+	</delete>
+
+	<delete id="delChapterVideo" parameterType="Long">
+		delete from sp_video where id in(select resourceid from sp_chapter_resourse where chapterid = #{chapterID} and type=1)
+	</delete>
+
+	<select id="getChapterVideo" parameterType="Long" resultType="Video">
+		select * from sp_video where id in(select resourceid from sp_chapter_resourse where chapterid = #{chapterID} and type=1)
+	</select>
+
+	<delete id="delChapterAudio" parameterType="Long">
+		delete from sp_audio where id in(select resourceid from sp_chapter_resourse where chapterid = #{chapterID} and type=2)
+	</delete>
+
+	<select id="getChapterAudio" parameterType="Long" resultType="Audio">
+		select * from sp_audio where id in(select resourceid from sp_chapter_resourse where chapterid = #{chapterID} and type=2) order by createtime asc
+	</select>
+
+	<delete id="delChapterPicture" parameterType="Long">
+		delete from sp_picture where id in(select resourceid from sp_chapter_resourse where chapterid = #{chapterID} and type=3)
+	</delete>
+
+	<select id="getChapterPicture" parameterType="Long" resultType="Picture">
+		select * from sp_picture where id in(select resourceid from sp_chapter_resourse where chapterid = #{chapterID} and type=3) order by createtime asc
+	</select>
+
+	<delete id="delResourse" parameterType="Long">
+		delete from sp_chapter_resourse where chapterid = #{chapterid}
+	</delete>
+
+	<update id="delChapter" parameterType="Long">
+		update 
+			sp_course_chapter 
+		set
+			enable = 0
+		where
+			id =  #{chapterID}
+	</update>
+
+	<select id="getAlbums" parameterType="Map" resultType="PhotoAlbum">
+		select 
+			id,
+			url,
+			left(createtime,10) as createtime,
+			userid 
+		from 
+			sp_photo_album 
+		where 
+			userid = #{userID} 
+			<if test="startDate != null and startDate != ''">
+				and left(createtime,10) >= #{startDate} 
+			</if>
+			and left(createtime,10) <![CDATA[<=]]> #{endDate} 
+			order by createtime desc
+	</select>
+
+	<select id="getAlbumsStartDate" parameterType="Map" resultType="String">
+		select left(createtime,10) from sp_photo_album where userid = #{userID} and left(createtime,10) <![CDATA[<=]]> #{endDate} order by createtime desc limit #{start},1
+	</select>
+
+	<select id="getAlbumsCount" parameterType="Long" resultType="Integer">
+		select count(id) from sp_photo_album where userid = #{userID}
+	</select>
+
+	<delete id="delAlbums" parameterType="Long">
+		delete from sp_photo_album where id = #{id}
+	</delete>
+
+	<select id="getFans" parameterType="Long" resultType="Fans">
+		select t.userid as userid, left(max(t.subtime),10) as subtime, c.nickname as nickname, c.headerimg as headerimg from 
+		(
+			(
+				select 
+					userid,subtime 
+				from 
+					sp_user_subscribe_teacher 
+				where 
+					teacherid = #{userID}
+					<if test="startDate != null and startDate != ''">
+						and left(subtime,10) >= #{startDate} 
+					</if>
+					 and left(subtime,10) <![CDATA[<=]]> #{endDate}
+			)
+			union all
+			(
+				select 
+					c.userid,c.subtime 
+				from 
+					sp_teacher_n_course a left join sp_course b on a.courseid=b.id left join sp_user_n_course c on b.id=c.courseid 
+				where 
+					a.userid=#{userID} 
+					<if test="startDate != null and startDate != ''">
+						and left(c.subtime,10) >= #{startDate} 
+					</if>
+					 and left(c.subtime,10) <![CDATA[<=]]> #{endDate}
+					and b.enable=1
+			)
+		) t left join p_account_info c on t.userid=c.accountid group by t.userid order by subtime desc
+	</select>
+
+	<select id="getFansStartDate" parameterType="Map" resultType="String">
+		select 
+			left(max(t.subtime),10) as subtime
+		from 
+		(
+			(select userid,subtime from sp_user_subscribe_teacher where teacherid = #{userID} and left(subtime,10) <![CDATA[<=]]> #{endDate})
+			union all
+			(select c.userid,c.subtime from sp_teacher_n_course a left join sp_course b on a.courseid=b.id left join sp_user_n_course c on b.id=c.courseid where a.userid=#{userID} and b.enable=1 and left(c.subtime,10) <![CDATA[<=]]> #{endDate})
+		) t left join p_account_info c on t.userid=c.accountid group by t.userid
+		order by subtime desc limit #{start},1
+	</select>
+
+	<select id="getInvitedQuestions" parameterType="Map" resultMap="UserQuestion">
+		select 
+			b.*, c.headerimg,c.nickname,c.corpname
+		from 
+			sp_teacher_reply_invited a left join sp_user_question b on a.invitedid=b.id left join p_account_info c on b.userid=c.accountid
+		where 
+			a.userid = #{userID} and type=2 and is_reply=0 order by b.createtime desc limit #{start},#{size}
+	</select>
+
+	<select id="getInvitedQuestionsCount" parameterType="Long" resultType="Integer">
+		select 
+			count(id)
+		from 
+			sp_teacher_reply_invited
+		where 
+			userid = #{userID} and type=2 and is_reply=0
+	</select>
+	<select id="getInvitedRepliesCount" parameterType="Map" resultType="Integer">
+		select 
+			count(id)
+		from 
+			sp_teacher_reply_invited
+		where 
+			userid = #{userid} and type=#{type} and is_reply=0
+			and createtime &gt;= #{beginTime} and createtime &lt;= #{endTime}
+	</select>
+
+	<select id="getUserTalks" resultType="UserTalk">
+		select 
+			b.id,b.userid,b.audio_url as audioUrl,b.time_length as timeLength,b.is_show_name as isShowName,b.content,b.labelids,b.labelnames,b.createtime,c.headerimg,c.nickname,c.corpname
+		from 
+			sp_teacher_reply_invited a left join sp_user_talk b on a.invitedid=b.id left join p_account_info c on b.userid=c.accountid
+		where a.type=1 
+			<if test="userid !=null and userid !=''">
+				and a.is_reply = #{isReply}
+			</if>
+			<if test="userid !=null and userid !=''">
+				and a.userid = #{userid}
+			</if>
+		<if test="userid==null or userid==''">
+			group by b.id
+		</if>
+			order by b.createtime desc limit #{start},#{size}
+	</select>
+
+	<select id="getUserTalksCount" resultType="Integer">
+		select 
+			count(DISTINCT(invitedid))
+		from 
+			sp_teacher_reply_invited
+		where 
+			type=1
+			<if test="userid!=null and userid!=''">
+				and is_reply = #{isReply}
+			</if>
+			<if test="userid!=null and userid!=''">
+				and userid = #{userid}
+			</if>
+	</select>
+
+	<select id="getUserQuestions" resultMap="UserQuestion">
+		select b.*, c.headerimg,c.nickname,c.corpname
+		from sp_user_question b
+		left join sp_teacher_reply_invited a on a.invitedid=b.id 
+		left join p_account_info c on b.userid=c.accountid
+		where a.type=2 
+		<if test="isReply!=null and isReply!=''">
+			and a.is_reply=#{isReply}
+		</if>
+		<if test="userid!=null and userid!=''">
+			and a.userid = #{userid}
+		</if>
+		order by b.createtime desc 
+		limit #{start},#{size}
+	</select>
+
+	<select id="getUserQuestionsCount" resultType="Integer">
+		select count(1) from sp_user_question uq
+		left join sp_teacher_reply_invited tri on tri.invitedid=uq.id 
+		where tri.type=2
+		<if test="isReply!=null and isReply!=''">
+			and tri.is_reply=#{isReply}
+		</if>
+		<if test="userid!=null and userid!=''">
+			and tri.userid = #{userid}
+		</if>
+	</select>
+
+	<select id="getRepliedTalks" parameterType="Map" resultType="UserTalk">
+		select 
+			b.id,b.userid,b.audio_url as audioUrl,b.time_length as timeLength,b.is_show_name as isShowName,b.content,b.labelids,b.labelnames,b.createtime,c.headerimg,c.nickname,c.corpname
+		from 
+			sp_teacher_reply_invited a left join sp_user_talk b on a.invitedid=b.id left join p_account_info c on b.userid=c.accountid
+		where 
+			a.userid = #{userID} and type=1 and is_reply=1 order by b.createtime desc limit #{start},#{size}
+	</select>
+
+	<select id="getRepliedTalksCount" parameterType="Long" resultType="Integer">
+		select 
+			count(id)
+		from 
+			sp_teacher_reply_invited
+		where 
+			userid = #{userID} and type=1 and is_reply=1
+	</select>
+
+	<update id="editReplyInvitedState" parameterType="Map">
+		update sp_teacher_reply_invited set is_reply=1 where userid = #{userID} and invitedid=#{invitedID}
+	</update>
+
+	<select id="getObjectSimpleReplys" parameterType="Map" resultType="UserNreply">
+		SELECT unr.linkid,ur.praise_cnt as praiseCnt,ur.content,ur.audio_url as audioUrl,ur.time_length as timeLength
+		FROM sp_user_n_reply unr 
+		LEFT JOIN sp_user_reply ur ON unr.replyid=ur.id
+		WHERE unr.objectid=#{objectID} and unr.reply_type=#{replyType}
+	</select>
+	
+	<select id="getObjectReplys" parameterType="Map" resultType="UserNreply">
+		SELECT i.accountid as userid,i.nickname,i.headerimg,ur.content,ur.img_url as imgUrl,unr.replyid,ur.audio_url as audioUrl,ur.time_length as timeLength,ur.createtime,unr.user_type as userType,ur.praise_cnt as praiseCnt,
+			unr.linkid,i2.nickname as linkname,if(unr.user_type=0,i.labelids,t.labelids) labelids,if(unr.user_type=0,i.labelnames,t.labelnames) labelnames
+		FROM sp_user_n_reply unr 
+		LEFT JOIN sp_user_reply ur ON unr.replyid=ur.id 
+		LEFT JOIN p_account_info i ON unr.userid=i.accountid 
+		LEFT JOIN sp_teacher t ON t.userid = i.accountid
+		LEFT JOIN sp_user_n_reply unr2 ON unr.linkid=unr2.replyid
+		LEFT JOIN p_account_info i2 ON unr2.userid=i2.accountid 
+		where unr.objectid=#{objectID} and unr.reply_type=#{replyType}
+		<if test="userid!=null and userid!=''">
+    		AND unr.userid = #{userid}
+    	</if>
+		order by ur.createtime desc
+	</select>
+	
+	<select id="getObjectOrderReplys" parameterType="Map" resultType="UserNreply">
+		SELECT i.accountid as userid,i.nickname,i.headerimg,ur.content,ur.img_url as imgUrl,unr.replyid,ur.audio_url as audioUrl,
+			ur.time_length as timeLength,ur.createtime,unr.user_type as userType,ur.praise_cnt as praiseCnt,
+			unr.linkid,i2.nickname as linkname,if(unr.user_type=0,i.labelids,t.labelids) labelids,if(unr.user_type=0,i.labelnames,t.labelnames) labelnames
+		FROM sp_user_n_reply unr 
+		LEFT JOIN sp_user_reply ur ON unr.replyid=ur.id 
+		LEFT JOIN p_account_info i ON unr.userid=i.accountid 
+		LEFT JOIN sp_teacher t ON t.userid = i.accountid
+		LEFT JOIN sp_user_n_reply unr2 ON unr.linkid=unr2.replyid
+		LEFT JOIN p_account_info i2 ON unr2.userid=i2.accountid 
+		WHERE unr.objectid=#{objectID} AND unr.reply_type=#{replyType} AND unr.linkid IS NULL
+		ORDER BY ur.praise_cnt DESC,ur.createtime DESC
+	</select>
+	
+	<select id="getObjectSonReplys" parameterType="Map" resultType="UserNreply">
+		SELECT i.accountid as userid,i.nickname,i.headerimg,ur.content,ur.img_url as imgUrl,unr.replyid,ur.audio_url as audioUrl,ur.time_length as timeLength,
+			ur.createtime,unr.user_type as userType,ur.praise_cnt as praiseCnt,
+			unr.linkid,i2.nickname as linkname,if(unr.user_type=0,i.labelids,t.labelids) labelids,if(unr.user_type=0,i.labelnames,t.labelnames) labelnames
+		FROM sp_user_n_reply unr 
+		LEFT JOIN sp_user_reply ur ON unr.replyid=ur.id 
+		LEFT JOIN p_account_info i ON unr.userid=i.accountid 
+		LEFT JOIN sp_teacher t ON t.userid = i.accountid
+		LEFT JOIN sp_user_n_reply unr2 ON unr.linkid=unr2.replyid
+		LEFT JOIN p_account_info i2 ON unr2.userid=i2.accountid 
+		WHERE unr.objectid=#{objectID} AND unr.reply_type=#{replyType} 
+		<if test="linkId!=null">
+			AND unr.linkid = #{linkId}
+		</if>
+		<if test="replyId!=null">
+			AND unr.replyid = #{replyId}
+		</if>
+	</select>
+
+	<select id="getUserPraises" parameterType="Map" resultType="UserPraise">
+		select b.accountid as userid,b.nickname,b.headerimg,b.labelids,b.labelnames as labelNames,a.createtime 
+		from sp_user_praise a 
+		left join p_account_info b on a.userid=b.accountid 
+		where 
+			a.objectid=#{objectID} and a.type=#{type}
+			<if test="userId!=null">
+				AND a.userid = #{userId}
+			</if>
+		order by a.createtime desc
+	</select>
+
+	<insert id="addAlbums" parameterType="PhotoAlbum">
+		insert into sp_photo_album (url,createtime,userid) values (#{url},now(), #{userid})
+	</insert>
+
+	<select id="getCourseComments" parameterType="Map" resultType="UserComment">
+		select 
+			c.id,c.userid,e.headerimg,e.nickname,e.corpname,d.content,d.createtime,d.praise_cnt as praiseCnt,b.id as chapterId,b.name as chapterName,a.id as courseId,a.name as courseName
+		from sp_teacher_n_course aa 
+		left join sp_course a on aa.courseid=a.id 
+		left join sp_course_chapter b on a.id=b.courseid 
+		left join sp_course_n_comment c on b.id=c.chapterid 
+		left join sp_user_reply d on c.replyid=d.id 
+		left join p_account_info e on c.userid=e.accountid
+		WHERE
+			aa.userid = #{userID} and a.enable=1 and b.enable=1 and c.id is not null
+		order by d.createtime desc
+		limit #{start},#{size}
+	</select>
+
+	<select id="getCourseCommentsCount" parameterType="Long" resultType="Integer">
+		select 
+			count(c.id)
+		from 
+			sp_teacher_n_course aa left join sp_course a on aa.courseid=a.id left join sp_course_chapter b on a.id=b.courseid left join sp_course_n_comment c on b.id=c.chapterid
+		WHERE
+			aa.userid = #{userID} and a.enable=1 and b.enable=1 and c.id is not null
+	</select>
+	
+	
+    <select id="getTeacherReplyInvitedList" resultMap="TeacherReplyInvited">
+    	SELECT * FROM sp_teacher_reply_invited 
+	    <where>
+			<if test="userid != null and userid != ''">
+	        	and userid = #{userid}
+	        </if>
+			<if test="invitedid != null and invitedid != ''">
+	        	and invitedid = #{invitedid}
+	        </if>
+			<if test="isReply != null and isReply != ''">
+	        	and is_reply = #{isReply}
+	        </if>
+			<if test="type != null and type != ''">
+	        	and type = #{type}
+	        </if>
+	    </where>
+    </select>
+    <select id="getInvitedTeacherList" resultMap="TeacherReplyInvited">
+    	SELECT * FROM sp_teacher_reply_invited 
+	    <where>
+			<if test="userid != null and userid != ''">
+	        	and userid = #{userid}
+	        </if>
+			<if test="invitedid != null and invitedid != ''">
+	        	and invitedid = #{invitedid}
+	        </if>
+			<if test="isReply != null and isReply != ''">
+	        	and is_reply = #{isReply}
+	        </if>
+			<if test="type != null and type != ''">
+	        	and type = #{type}
+	        </if>
+	    </where>
+	    GROUP BY userid
+    </select>
+</mapper>

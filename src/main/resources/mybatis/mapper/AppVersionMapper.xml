@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.AppVersionMapper">
+
+	<resultMap id="AppVersion" type="com.hc360.mobileaccount.po.AppVersion">
+        <result property="versionid" column="versionid"/>
+        <result property="versionCode" column="version_code"/>
+        <result property="versionName" column="version_name"/>
+        <result property="description" column="description"/>
+        <result property="fileSize" column="file_size"/>
+        <result property="fileEncrypt" column="file_encrypt"/>
+        <result property="force" column="force"/>
+        <result property="downUrl" column="down_url"/>
+        <result property="createtime" column="createtime"/>
+        <result property="state" column="state"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			versionid,version_code,version_name,description,file_size,file_encrypt,`force`,down_url,createtime,state
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="versionid">
+    <![CDATA[
+        INSERT INTO sp_app_version (
+        	versionid ,
+        	version_code ,
+        	version_name ,
+        	description ,
+        	file_size ,
+        	file_encrypt ,
+        	`force` ,
+        	down_url ,
+        	createtime ,
+        	state 
+        ) VALUES (
+         	#{versionid},
+         	#{versionCode},
+         	#{versionName},
+         	#{description},
+         	#{fileSize},
+         	#{fileEncrypt},
+         	#{force},
+         	#{downUrl},
+         	NOW(),
+         	#{state}
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_app_version
+        <set>
+			<if test="versionCode != null and versionCode != ''">
+	        	version_code = #{versionCode} ,
+	        </if>
+			<if test="versionName != null and versionName != ''">
+	        	version_name = #{versionName} ,
+	        </if>
+			<if test="description != null and description != ''">
+	        	description = #{description} ,
+	        </if>
+			<if test="fileSize != null and fileSize != ''">
+	        	file_size = #{fileSize} ,
+	        </if>
+			<if test="fileEncrypt != null and fileEncrypt != ''">
+	        	file_encrypt = #{fileEncrypt} ,
+	        </if>
+			<if test="force != null">
+	        	`force` = #{force} ,
+	        </if>
+			<if test="downUrl != null and downUrl != ''">
+	        	down_url = #{downUrl} ,
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	createtime = #{createtime} ,
+	        </if>
+			<if test="versionCode != null and versionCode != ''">
+	        	state = #{state} 
+	        </if>
+	    </set>
+        WHERE 
+	        versionid = #{versionid} 
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_app_version WHERE
+        versionid = #{versionid} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="AppVersion">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_app_version 
+	        WHERE 
+		        versionid = #{versionid} 
+	    ]]>
+	</select>
+		
+    <select id="getVersionList" resultMap="AppVersion">
+    	SELECT <include refid="columns" />
+	    FROM sp_app_version 
+	    <where>
+			<if test="versionCode != null and versionCode != ''">
+	        	and version_code = #{versionCode}
+	        </if>
+			<if test="versionName != null and versionName != ''">
+	        	and version_name = #{versionName}
+	        </if>
+			<if test="fileEncrypt != null and fileEncrypt != ''">
+	        	and file_encrypt = #{fileEncrypt}
+	        </if>
+			<if test="force != null and force != ''">
+	        	and `force` = #{force}
+	        </if>
+			<if test="downUrl != null and downUrl != ''">
+	        	and down_url = #{downUrl}
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	and createtime = #{createtime}
+	        </if>
+			<if test="state != null and state != ''">
+	        	and state = #{state}
+	        </if>
+	    </where>
+	    ORDER BY createtime DESC
+    </select>
+
+	
+</mapper>
+

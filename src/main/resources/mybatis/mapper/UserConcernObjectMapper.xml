@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.UserConcernObjectMapper">
+
+	<resultMap id="UserConcernObject" type="com.hc360.mobileaccount.po.UserConcernObject">
+        <result property="concernObjectId" column="concern_object_id"/>
+        <result property="userid" column="userid"/>
+        <result property="objectid" column="objectid"/>
+        <result property="createtime" column="createtime"/>
+        <result property="type" column="type"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			concern_object_id,userid,objectid,createtime,type
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="concernObjectId">
+    <![CDATA[
+        INSERT INTO sp_user_concern_object (
+        	concern_object_id ,
+        	userid ,
+        	objectid ,
+        	createtime ,
+        	type 
+        ) VALUES (
+         	#{concernObjectId},
+         	#{userid},
+         	#{objectid},
+         	NOW(),
+         	#{type}
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_user_concern_object
+        <set>
+			<if test="userid != null and userid != ''">
+	        	userid = #{userid} ,
+	        </if>
+			<if test="objectid != null and objectid != ''">
+	        	objectid = #{objectid} ,
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	createtime = #{createtime} ,
+	        </if>
+			<if test="type != null and type != ''">
+	        	type = #{type} 
+	        </if>
+	    </set>
+        WHERE 
+	        concern_object_id = #{concernObjectId} 
+	</update>
+
+    <delete id="delete">
+        DELETE FROM sp_user_concern_object 
+        WHERE type = #{type} 
+		<if test="userid != null and userid != ''">
+        	and userid = #{userid}
+        </if>
+		<if test="objectid != null and objectid != ''">
+        	and objectid = #{objectid}
+        </if>
+		<if test="concernObjectId != null and concernObjectId != ''">
+        	and concern_object_id = #{concernObjectId}
+        </if>
+    </delete>
+    
+    <select id="getById" resultMap="UserConcernObject">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_user_concern_object 
+	        WHERE 
+		        concern_object_id = #{id} 
+	    ]]>
+	</select>
+		
+    <select id="getUserConcernObjectList" resultMap="UserConcernObject">
+    	SELECT <include refid="columns" />
+	    FROM sp_user_concern_object 
+	    <where>
+			<if test="userid != null and userid != ''">
+	        	and userid = #{userid}
+	        </if>
+			<if test="objectid != null and objectid != ''">
+	        	and objectid = #{objectid}
+	        </if>
+			<if test="type != null and type != ''">
+	        	and type = #{type}
+	        </if>
+	    </where>
+	    <if test="size!=null and size!=''">
+	    	ORDER BY createtime DESC
+	    	LIMIT #{start},#{size}
+	    </if>
+    </select>
+    
+    <select id="getUserConcernObjectCount" resultType="Integer">
+    	SELECT count(1) FROM sp_user_concern_object 
+	    <where>
+			<if test="userid != null and userid != ''">
+	        	and userid = #{userid}
+	        </if>
+			<if test="objectid != null and objectid != ''">
+	        	and objectid = #{objectid}
+	        </if>
+			<if test="type != null and type != ''">
+	        	and type = #{type}
+	        </if>
+	    </where>
+    </select>
+
+	
+</mapper>
+

@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hc360.mobileaccount.dao.AccountMapper">
+
+	<resultMap id="Account" type="com.hc360.mobileaccount.po.Account">
+        <result property="accountid" column="accountid"/>
+        <result property="phonenum" column="phonenum"/>
+        <result property="username" column="username"/>
+        <result property="nickname" column="nickname"/>
+        <result property="sex" column="sex"/>
+        <result property="address" column="address"/>
+        <result property="email" column="email"/>
+        <result property="createtime" column="createtime"/>
+        <result property="headerimg" column="headerimg"/>
+        <result property="enable" column="enable"/>
+        <result property="invitation" column="invitation"/>
+        <result property="bcnum" column="b_c_num"/>
+        <result property="infoseach" column="infoseach"/>
+        <result property="apptype" column="apptype"/>
+        <result property="corpname" column="corpname"/>
+        <result property="aposition" column="aposition"/>
+        <result property="mainind" column="mainind"/>
+        <result property="jobcontent" column="jobcontent"/>
+        <result property="linkphone" column="linkphone"/>
+        <result property="ismodify" column="ismodify"/>
+        <result property="area" column="area"/>
+        <result property="labelids" column="labelids"/>
+        <result property="labelnames" column="labelnames"/>
+        <result property="workAge" column="work_age"/>
+        <result property="logintime" column="logintime"/>
+        <result property="userType" column="user_type"/>
+        <result property="level" column="level"/>
+        <result property="finishStudyCnt" column="finish_study_cnt"/>
+        <result property="umengid" column="umengid"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			accountid,phonenum,username,nickname,sex,address,email,createtime,headerimg,enable,invitation,b_c_num,infoseach,apptype,
+			corpname,aposition,mainind,jobcontent,linkphone,ismodify,area,labelids,labelnames,work_age,logintime,user_type,level,finish_study_cnt,umengid
+	    ]]>
+	</sql>
+
+	<!-- 保存 -->
+	<insert id="insert" parameterType="Account" useGeneratedKeys="true" keyProperty="accountid">
+			
+		insert into p_account_info (
+			  phonenum,username,nickname,sex,address,email,createtime,headerimg,enable,
+			  invitation,apptype,corpname,aposition,mainind,jobcontent,work_age
+	    )		
+		values (
+			#{phone},#{username},#{nickname},#{sex},#{address},#{email},#{createtime},#{headerimg},#{enable},
+			#{invitation},#{apptype},#{corpname},#{aposition},#{mainind},#{jobcontent},#{workAge}
+		)
+	</insert>
+	
+	<update id="updateAccount" parameterType="Account">
+		update p_account_info 
+		<set>
+			ismodify = 1,logintime = NOW(),
+			<if test="headerimg != null and headerimg != ''">
+				headerimg = #{headerimg},
+			</if>
+			<if test="nickname != null and nickname != ''">
+				nickname = #{nickname},
+			</if>
+			<if test="username != null and username != ''">
+				username = #{username},
+			</if>
+			<if test="sex != null and sex != ''">
+				sex = #{sex},
+			</if>
+			<if test="address != null and address != ''">
+				address = #{address},
+			</if>
+			<if test="email != null and email != ''">
+				`email` = #{email},
+			</if>
+			<if test="corpname != null and corpname != ''">
+				corpname = #{corpname},
+			</if>
+			<if test="mainind != null and mainind != ''">
+				mainind = #{mainind},
+			</if>
+			<if test="corpname != null and corpname != ''">
+				corpname = #{corpname},
+			</if>
+			<if test="jobcontent != null and jobcontent != ''">
+				jobcontent = #{jobcontent},
+			</if>
+			<if test="aposition != null and aposition != ''">
+				aposition = #{aposition},
+			</if>
+			<if test="linkphone != null and linkphone != ''">
+				linkphone = #{linkphone},
+			</if>
+			<if test="workAge != null and workAge != ''">
+				work_age = #{workAge},
+			</if>
+			<if test="area != null and area != ''">
+				area = #{area},
+			</if>
+			<if test="mainind != null and mainind != ''">
+				mainind = #{mainind},
+			</if>
+			<if test="labelids != null and labelids != ''">
+				labelids = #{labelids},
+			</if>
+			<if test="labelnames != null and labelnames != ''">
+				labelnames = #{labelnames},
+			</if>
+			<if test="userType != null and userType != ''">
+				user_type = #{userType},
+			</if>
+			<if test="level != null and level != ''">
+				level = #{level},
+			</if>
+			<if test="finishStudyCnt != null and finishStudyCnt != ''">
+				finish_study_cnt = #{finishStudyCnt},
+			</if>
+			<if test="umengid != null and umengid != ''">
+				umengid = #{umengid},
+			</if>
+		</set>	
+		where
+			phonenum = #{phone}
+	</update>
+	
+	<select id="selectAccount" parameterType="String" resultMap="Account">
+		select accountid,phonenum phone,phonenum,username,nickname,sex,address,email,createtime,headerimg,enable,invitation,b_c_num,infoseach,apptype,
+		corpname,aposition,mainind,jobcontent,linkphone,ismodify,area,labelids,labelnames,work_age,logintime,user_type,level,finish_study_cnt,umengid
+ 		from p_account_info where phonenum = #{phonenum}
+	</select>
+	
+	<select id="getAccountInfoById" resultMap="Account">
+		select <include refid="columns" />,phonenum phone from p_account_info where accountid = #{accountId}
+	</select>
+	
+	<select id="getReachLevelUserByLevelId" parameterType="map" resultMap="Account">
+		select <include refid="columns" /> from p_account_info where level = #{gradeId}
+		order by logintime desc
+		limit #{size}
+	</select>
+	    <select id="selectActivedUser" parameterType="Map" resultType="String">
+        SELECT 
+            a.phonenum
+        FROM
+            (
+                SELECT 
+                    phonenum,
+                    FROM_UNIXTIME(createtime/1000) AS createtime
+                FROM 
+                    `p_account_info` 
+                WHERE 
+                    FROM_UNIXTIME(createtime/1000) > #{start}
+             ) a
+         LEFT JOIN 
+            (
+                SELECT
+                    phonenum,
+                    MAX(finaltime) AS finaltime
+                FROM
+                    `p_final_time_log` 
+                WHERE 
+                    finaltime > #{start} AND finaltime <![CDATA[<=]]> #{end}
+                GROUP BY 
+                    phonenum
+            ) b 
+         ON
+            a.`phonenum` = b.phonenum
+         WHERE
+            LEFT(a.createtime,10) != LEFT(b.finaltime,10)
+    </select>
+    
+    
+    <select id="getNologinUserList" resultMap="Account">
+    	select <include refid="columns" /> from p_account_info 
+    	where date(logintime)=#{dateStr}
+    </select>
+    
+    
+
+	<update id="updateChongzhi" >
+		update p_goods set huodongflag = 1
+	</update>
+	
+	<delete id="deleteYzx" >
+		delete from p_account_yzx where id in('5031','4778','4776','4779','4777','4772','4780','4781','4773','4865','4866')
+	</delete>
+		
+	<delete id="deleteaccountInfo" parameterType="String">
+		delete from p_account_info where phonenum = #{phone}
+	</delete>
+	
+	<delete id="deleteaccountSecret" parameterType="String">
+		delete from p_account_secret where phone = #{phone}
+	</delete>
+	
+	<delete id="deleteaccountYZM" parameterType="String">
+		delete from p_account_yzm where phone = #{phone}
+	</delete>
+	
+	<delete id="deleteaccountYZX" parameterType="String">
+		delete from p_account_yzx where phone = #{phone}
+	</delete>
+	
+	<delete id="deleteaccountScore" parameterType="String">
+		delete from p_account_score where phone = #{phone}
+	</delete>
+	
+	<delete id="deleteaccountScoreLog" parameterType="String">
+		delete from p_account_score_log where phone = #{phone}
+	</delete>
+	
+	<update id="updateInfoSearch" parameterType="java.lang.String">
+		update p_account_info set infoseach = 1  where accountid = #{accountid} 
+	</update>
+	
+	<select id="selectPhoneByAccountId" parameterType="java.lang.String" resultType="java.lang.String">
+		select phone from p_account_info where accountid = #{accountid}
+	</select>
+	
+	<select id="countPhone" parameterType="Map" resultType="Integer">
+		select count(1) from p_account_info where phonenum = #{phone} and apptype = #{apptype}
+	</select>
+	
+	<delete id="deletephoneinfo" parameterType="java.lang.String">
+		delete from p_account_info where phonenum = #{phone}
+	</delete>
+	
+	<insert id="insertSecret" parameterType="AccountSecret">
+		insert into p_account_secret(
+			phone,secret,createtime,apptype,accountid
+		) values(
+			#{phone},#{secret},#{createtime},#{apptype},#{accountid}
+		)
+	</insert>	
+	
+	<select id="getAccountPwd" parameterType="Map" resultType="AccountSecret">
+		select phone,secret from p_account_secret where phone = #{phone} and apptype = #{apptype}
+	</select>
+	
+	<update id="updatepwd" parameterType="AccountYZM">
+		update p_account_secret set secret = #{pwd} where phone = #{phone} and apptype = #{apptype}
+	</update>
+	
+	<select  id="getAccountIdByPhone" parameterType="Map" resultType="java.lang.String">
+		select accountid from p_account_info where phonenum = #{phone} and apptype=#{apptype}
+	</select>
+	
+	<select  id="getAccountIdByUserName" parameterType="Map" resultType="java.lang.String">
+		select accountid from p_account_info where username = #{username} and apptype=#{apptype}
+	</select>
+	
+	<update id="updateAccountStatus" parameterType="Account">
+		update p_account_info set enable = #{enable} where accountid = #{accountid}
+	</update>
+	
+	<insert id="insertYZM" parameterType="AccountYZM">
+		insert into p_account_yzm (
+			phone,shortsecret,type,createtime,during,apptype
+		) values(
+			#{phone},#{shortsecret},#{type},#{createtime},#{during},#{apptype}
+		)		
+	</insert>
+	
+	<select id="selectYZM" parameterType="AccountYZM" resultType="AccountYZM">
+		select shortsecret,phone,createtime,during from p_account_yzm where phone=#{phone} and type =#{type} and apptype = #{apptype} order by id desc limit 1
+	</select>
+	
+	<delete id="deleteYZM" parameterType="AccountYZM">
+		delete from p_account_yzm where phone=#{phone} and type = #{type}
+	</delete>	
+	
+	<update id="updatelogin" parameterType="AccountSecret">
+		update p_account_secret set logintime = #{logintime} where phone = #{phone}
+	</update>
+	
+	<insert id="insertYZX" parameterType="AccountYzx">
+		insert into p_account_yzx (phone,appid,charge,clientType,clientNumber,clientPwd,createDate,apptype,balance)
+		values(
+			#{phone},#{appid},#{charge},#{clientType},#{clientNumber},#{clientPwd},#{createDate},#{apptype},#{balance}
+		)		
+	</insert>
+	
+	<select id="getPhone" resultType="Account">
+		select phonenum phone, accountid from p_account_info where accountid between 100004872 and 100005241
+	</select>
+	
+	<select id="selectAccountYzx" parameterType="Map" resultType="AccountYzx">
+		select * from p_account_yzx where phone = #{phone} and apptype=#{apptype}
+	</select>
+
+    <select id="selectAccountYzxAll" parameterType="Map" resultType="AccountYzx">
+        select * from p_account_yzx where clientType=1 limit #{start},#{size}
+    </select>
+
+    <update id="updateAccountYzx"  parameterType="AccountYzx">
+        UPDATE p_account_yzx SET balance = #{balance}, clientType = #{clientType}, createDate = #{createDate} WHERE clientNumber= #{clientNumber}
+    </update>
+
+    <select id="selectAccountGlAll" resultType="GlData">
+        select * from p_account_gl
+    </select>
+
+	<select id="selectAccountYzxList" resultType="AccountYzx">
+		select * from p_account_yzx where balance > 0
+	</select>
+	
+	<select id="selectYzxByClientNumber" parameterType="java.lang.String" resultType="AccountYzx">
+		select * from p_account_yzx where clientNumber = #{clientNumber}
+	</select>
+	
+	<update id="clearYzxBalacne" parameterType="java.lang.String">
+		update p_account_yzx set balance = 0 where phone = #{phone}
+	</update>
+	
+	<update id="updateYzxbalance" parameterType="Map">
+		update p_account_yzx set balance = balance + #{length} where phone=#{phone}
+	</update>
+	
+	<update id="cutYzxbalance" parameterType="Map">
+		UPDATE p_account_yzx SET balance = (CASE WHEN #{length}>balance THEN 0 ELSE balance-#{length} END) WHERE clientNumber=#{clientNumber}
+	</update>
+	
+	<select id="selectYzxCallCountByPhoneAndTime" parameterType="Map" resultType="Integer">
+		SELECT count(1) FROM p_account_yzx a 
+		LEFT JOIN p_yzx_callreq b ON a.clientNumber=b.caller 
+		WHERE phone = #{phone} AND b.length>0 AND calltime &gt;=#{calltime}
+	</select>
+</mapper>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hc360.mobileaccount.dao.GLMapper">	
+	 
+	 <select id="countPhone" parameterType="String" resultType="Integer">
+	 	select count(1) from p_account_gl where phone = #{phone}
+	 </select>
+	 
+	 <select id="selectByPhone" parameterType="java.lang.String" resultType="GlData">
+	 	select phone,uid,password,balance from p_account_gl where phone = #{phone}
+	 </select>
+	 
+	 <insert id="addAccount" parameterType="GlData">
+	 	insert into p_account_gl (phone,uid,password,first,last_login_ip,last_login_time,bind_time,reg_time,balance,basic_balance,gift_balance,valid_time,ctime,gift_valid_time,enable_flag)
+	 	values(
+	 		#{phone},#{uid},#{password},#{first},#{last_login_ip},#{last_login_time},#{bind_time},#{reg_time},#{balance},#{basic_balance},#{gift_balance},#{valid_time},#{ctime},#{gift_valid_time},#{enable_flag}
+	 	)
+	 </insert>
+	 
+	 <update id="updateAccount" parameterType="GlData">
+	 	update p_account_gl
+	 	<set>
+			<if test="password != null and password != ''">
+				password=#{password},
+			</if>
+			<if test="last_login_ip != null and last_login_ip != ''">
+				last_login_ip=#{last_login_ip},
+			</if>
+			<if test="last_login_time != null and last_login_time != ''">
+				last_login_time=#{last_login_time},
+			</if>
+			<if test="balance != null and balance != ''">
+				balance=#{balance},
+			</if>
+			<if test="basic_balance != null and basic_balance != ''">
+				password=#{password},
+			</if>
+			<if test="basic_balance != null and basic_balance != ''">
+				password=#{password},
+			</if>
+			<if test="gift_balance != null and gift_balance != ''">
+				gift_balance=#{gift_balance},
+			</if>
+			<if test="valid_time != null and valid_time != ''">
+				valid_time=#{valid_time},
+			</if>
+			<if test="gift_valid_time != null and gift_valid_time != ''">
+				gift_valid_time=#{gift_valid_time},
+			</if>
+			<if test="enable_flag != null and enable_flag != ''">
+				enable_flag=#{enable_flag},
+			</if>
+			<if test="length != null and length != ''">
+				length = length + #{length},
+			</if>
+			<if test="updatetime != null and updatetime != ''">
+				updatetime = #{updatetime}
+			</if>
+		</set>
+		where uid = #{uid}
+	 </update>
+
+</mapper>

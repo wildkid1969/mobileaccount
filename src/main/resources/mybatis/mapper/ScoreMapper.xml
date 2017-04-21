@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hc360.mobileaccount.dao.ScoreMapper">
+
+	<insert id="insertScoreLog" parameterType="Score">
+		insert into	p_account_score_log (phone,score,scorefrom,scoretype,marktime,name) values (
+		#{phone},#{scorenum},#{scorefrom},#{type},now(),#{name})
+	</insert>
+	
+	<select id="getScoreLog" parameterType="String" resultType="Score">
+		select marktime,name,phone,score scorenum,scoretype from p_account_score_log where phone = #{phone}
+	</select>
+	
+	<insert id="insertScore" parameterType="Score">
+		insert into p_account_score (phone,score,updatetime,createtime) values (
+			#{phone},#{scorenum},#{marktime},#{marktime}
+		)
+	</insert>
+	
+	<select id="countScoreLog" parameterType="Score" resultType="java.lang.Integer">
+		select count(1) from p_account_score_log where phone = #{phone} and DAYOFYEAR(marktime) =  DAYOFYEAR(now())  and YEAR(marktime) = YEAR(now())  and scoretype = #{type}
+	</select>
+	
+	<update id="updateScoreAdd" parameterType="Score">
+		update p_account_score set score = score + #{scorenum},updatetime = #{marktime} where phone = #{phone}
+	</update>
+	
+	<update id = "updateScoredel" parameterType="Score">
+		update p_account_score set score = score - #{scorenum},updatetime = #{marktime} where phone = #{phone}
+	</update>
+	
+	<select id="selectScore" parameterType="java.lang.String" resultType="Score">
+		select score scorenum,updatetime marktime,updatetime,phone from p_account_score where phone = #{phone}
+	</select>
+	
+	<insert id="insertScoreDraw" parameterType="ScoreDraw">
+		insert into p_account_score_draw (phone,score,result,actiontime) values (
+			#{phone},#{score},#{result},#{actiontime}
+		)
+	</insert>
+	
+	<select id="selectScoreDraw" resultType="ScoreDraw" parameterType="java.lang.String">
+		select * from p_account_score_draw where phone = #{phone}
+	</select>
+
+</mapper>

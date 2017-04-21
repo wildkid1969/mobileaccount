@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.CourseChapterMapper">
+
+	<resultMap id="CourseChapter" type="com.hc360.mobileaccount.po.CourseChapter">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="coverUrl" column="cover_url"/>
+        <result property="courseid" column="courseid"/>
+        <result property="labelids" column="labelids"/>
+        <result property="praiseCnt" column="praise_cnt"/>
+        <result property="type" column="type"/>
+        <result property="enable" column="enable"/>
+        <result property="labelnames" column="labelnames"/>
+        
+        <result property="finishUserCnt" column="finishUserCnt"/>
+        <result property="userCommentCnt" column="userCommentCnt"/>
+        <result property="gradeId" column="gradeId"/>
+        <result property="gradeName" column="gradeName"/>
+        <result property="teacherId" column="teacherId"/>
+        <result property="teacherName" column="teacherName"/>
+	</resultMap>
+	
+	<resultMap id="UserReply" type="com.hc360.mobileaccount.po.CourseNcomment">
+		<result property="id" column="id"/>
+        <result property="courseid" column="courseid"/>
+        <result property="chapterid" column="chapterid"/>
+        <result property="userid" column="userid"/>
+        <result property="replyid" column="replyid"/>
+        <collection property="reply" ofType="UserReply">
+        	<result property="id" column="id"/>
+	        <result property="content" column="content"/>
+	        <result property="imgUrl" column="img_url"/>
+	        <result property="audioUrl" column="audio_url"/>
+	        <result property="createtime" column="createtime"/>
+	        <result property="praiseCnt" column="praise_cnt"/>
+        </collection>
+        <collection property="user" ofType="Account">
+        	<result property="accountid" column="accountid"/>
+	        <result property="nickname" column="nickname"/>
+	        <result property="headerimg" column="headerimg"/>
+	        <result property="corpname" column="corpname"/>
+        </collection>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,name,cover_url,courseid,labelids,praise_cnt,type,enable,labelnames
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_course_chapter (
+        	id ,
+        	name ,
+        	cover_url,
+        	courseid ,
+        	labelids ,
+        	praise_cnt ,
+        	type ,
+        	enable ,
+        	labelnames 
+        ) VALUES (
+        	#{id} ,
+        	#{name} ,
+        	#{coverUrl} ,
+        	#{courseid} ,
+        	#{labelids} ,
+        	#{praiseCnt} ,
+        	#{type} ,
+        	#{enable} ,
+        	#{labelnames} 
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+    <![CDATA[
+        UPDATE sp_course_chapter SET
+	        name = #{name} ,
+	        cover_url = #{coverUrl} ,
+	        courseid = #{courseid} ,
+	        labelids = #{labelids} ,
+	        praise_cnt = #{praiseCnt} ,
+	        type = #{type} ,
+	        enable = #{enable} ,
+	        labelnames = #{labelnames} 
+        WHERE 
+	        id = #{id} 
+    ]]>
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_course_chapter WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getChapterById" resultMap="CourseChapter">
+		SELECT cc.*,if(cnc.userCommentCnt>0,cnc.userCommentCnt,0) userCommentCnt,g.id gradeId,g.`name` gradeName,t.userid teacherId,t.username teacherName
+		FROM sp_course_chapter cc 
+		LEFT JOIN(
+			SELECT count(1) userCommentCnt,chapterid FROM sp_course_n_comment WHERE chapterid=#{id} 
+		)cnc ON cnc.chapterid=cc.id
+		LEFT JOIN sp_grade_n_course gnc ON gnc.courseid = cc.courseid
+		LEFT JOIN sp_grade g ON g.id = gnc.gradeid
+		LEFT JOIN sp_teacher_n_course tnc ON tnc.courseid = cc.courseid
+		LEFT JOIN sp_teacher t ON t.userid = tnc.userid
+		WHERE cc.id = #{id}
+	</select>
+		
+    <select id="getUserIsPraise" resultType="Integer">
+        SELECT if(up.isPraise>0,up.isPraise,0) isPraise
+		FROM sp_course_chapter cc 
+		LEFT JOIN (
+			SELECT count(1) isPraise,objectid FROM sp_user_praise WHERE userid = #{userid} AND objectid = #{id} AND type=#{type}
+		)up ON up.objectid = cc.id
+		WHERE cc.id = #{id}
+    </select>
+    
+    <update id="addPraiseCnt">
+		UPDATE sp_course_chapter SET praise_cnt = praise_cnt+1 WHERE id = #{id} 
+	</update>
+	
+	<update id="reducePraiseCnt">
+		UPDATE sp_course_chapter SET praise_cnt = if(praise_cnt>0,praise_cnt-1,0) WHERE id = #{id} 
+	</update>
+    
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 offset,pageSize,lastRows 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="getChapterListByCourseId" resultMap="CourseChapter">
+    	SELECT c.*,if(sl.finishCnt>0,sl.finishCnt,0) finishUserCnt FROM sp_course_chapter c
+		LEFT JOIN(
+			SELECT count(1) finishCnt,chapterid FROM sp_user_study_log WHERE courseid = #{courseid} AND state=1 GROUP BY chapterid
+		)sl ON sl.chapterid = c.id
+		WHERE c.courseid = #{courseid} and c.enable=1
+    </select>
+    
+    <select id="getChapterCommentList" resultMap="UserReply">
+    	SELECT ur.*,i.accountid,i.nickname,i.headerimg,i.corpname
+    	FROM sp_course_n_comment cnc 
+		LEFT JOIN sp_user_reply ur ON ur.id=cnc.replyid
+		LEFT JOIN p_account_info i ON i.accountid=cnc.userid
+		WHERE cnc.chapterid=#{chapterid}
+		ORDER BY ur.createtime desc
+		LIMIT #{start},#{size}
+    </select>
+    <select id="getChapterCommentCount" resultType="Integer">
+    	SELECT count(1) FROM sp_course_n_comment WHERE chapterid=#{chapterid}
+    </select>
+    
+    <select id="getRecommendChapterIdListByLabelId" resultType="String">
+    	SELECT cc.id FROM sp_course_chapter cc 
+		LEFT JOIN sp_chapter_resourse cr ON cr.chapterid = cc.id AND cr.type=#{type}
+		<if test="type==1">
+			LEFT JOIN sp_video v ON v.id=cr.resourceid
+		</if>
+		<if test="type==2">
+			LEFT JOIN sp_audio v ON v.id=cr.resourceid
+		</if>
+		LEFT JOIN sp_grade_n_course gnc ON gnc.courseid=cc.courseid
+		WHERE labelids like CONCAT('%',#{labelId},'%' ) <!-- AND gnc.gradeid &lt;= #{level} -->
+		ORDER BY v.play_cnt DESC
+		LIMIT #{size}
+    </select>
+    
+    <select id="getAll" resultMap="CourseChapter">
+    	SELECT <include refid="columns" /> FROM sp_course_chapter WHERE enable=1
+    </select>
+    
+    <select id="getStudiedChapLabelList" resultType="CourseChapter">
+    	SELECT cc.id,cc.labelids FROM sp_course_chapter cc
+		WHERE EXISTS (SELECT chapterid FROM sp_user_study_log sl WHERE sl.chapterid=cc.id AND userid=#{userid})
+    </select>
+    
+    
+     <select id="getCourseChapterList" resultMap="CourseChapter">
+    	SELECT <include refid="columns" />
+	    FROM sp_course_chapter 
+	    <where>
+			<if test="courseid != null and courseid != ''">
+	        	and courseid = #{courseid}
+	        </if>
+			<if test="type != null and type != ''">
+	        	and type = #{type}
+	        </if>
+			<if test="enable != null and enable != ''">
+	        	and enable = #{enable}
+	        </if>
+	    </where>
+    </select>
+	
+</mapper>
+

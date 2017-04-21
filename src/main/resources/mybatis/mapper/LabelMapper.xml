@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.LabelMapper">
+
+	<resultMap id="Label" type="com.hc360.mobileaccount.po.Label">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="userid" column="userid"/>
+        <result property="createtime" column="createtime"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,name,userid,createtime
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_label (
+        	id ,
+        	name,
+        	userid,
+        	createtime
+        ) VALUES (
+        	#{id} ,
+        	#{name} ,
+        	#{userid} ,
+        	NOW() 
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+    <![CDATA[
+        UPDATE sp_label SET
+	        name = #{name} ,
+	        userid = #{userid} ,
+	        createtime = NOW()
+        WHERE 
+	        id = #{id} 
+    ]]>
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_label WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="Label">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_label 
+	        WHERE 
+		        id = #{id} 
+	    ]]>
+	</select>
+	
+    <select id="getByName" resultMap="Label">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_label 
+	        WHERE 
+		        name = #{labelName} 
+	    ]]>
+	</select>
+		
+    <select id="getAllLabels" resultMap="Label">
+    	SELECT <include refid="columns" /> FROM sp_label 
+    </select>
+    
+    <!-- 随机获取标签 -->
+    <select id="getSomeLablesByRandom" resultMap="Label">
+    	SELECT * FROM sp_label AS t1 
+		JOIN (SELECT ROUND(RAND() * ((SELECT MAX(id) FROM sp_label)-(SELECT MIN(id) FROM sp_label))+(SELECT MIN(id) FROM sp_label)) AS id) AS t2
+		WHERE t1.id >= t2.id
+		ORDER BY t1.id 
+		LIMIT #{size}
+    </select>
+	
+</mapper>
+

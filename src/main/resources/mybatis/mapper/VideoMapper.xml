@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.VideoMapper">
+
+	<resultMap id="Video" type="com.hc360.mobileaccount.po.Video">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="imgUrl" column="img_url"/>
+        <result property="timeLength" column="time_length"/>
+        <result property="sdUrl" column="sd_url"/>
+        <result property="hdUrl" column="hd_url"/>
+        <result property="shdUrl" column="shd_url"/>
+        <result property="playCnt" column="play_cnt"/>
+        <result property="videofrom" column="videofrom"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,name,img_url,time_length,sd_url,hd_url,shd_url,play_cnt,videofrom
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_video (
+        	id ,
+        	name ,
+        	img_url,
+        	time_length ,
+        	sd_url ,
+        	hd_url ,
+        	shd_url ,
+        	play_cnt ,
+        	videofrom
+        ) VALUES (
+        	#{id} ,
+        	#{name} ,
+        	#{imgUrl} ,
+        	#{timeLength} ,
+        	#{sdUrl} ,
+        	#{hdUrl} ,
+        	#{shdUrl} ,
+        	#{playCnt} ,
+        	#{videofrom} 
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+    <![CDATA[
+        UPDATE sp_video SET
+	        name = #{name} ,
+	        img_url = #{imgUrl} ,
+	        time_length = #{timeLength} ,
+	        sd_url = #{sdUrl} ,
+	        hd_url = #{hdUrl} ,
+	        shd_url = #{shdUrl} ,
+	        play_cnt = #{playCnt} 
+	        videofrom = #{videofrom} 
+        WHERE 
+	        id = #{id} 
+    ]]>
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_video WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="Video">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_video 
+	        WHERE 
+		        id = #{id} 
+	    ]]>
+	</select>
+		
+    <update id="updateVideoPlayCnt">
+       UPDATE sp_video SET play_cnt = play_cnt+1 WHERE id = #{id} 
+    </update>
+    
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 offset,pageSize,lastRows 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="findPage" resultMap="Video">
+    	SELECT <include refid="columns" />
+	    FROM sp_video 
+    </select>
+	
+</mapper>
+

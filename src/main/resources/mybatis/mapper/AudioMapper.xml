@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.AudioMapper">
+
+	<resultMap id="Audio" type="com.hc360.mobileaccount.po.Audio">
+        <result property="id" column="id"/>
+        <result property="url" column="url"/>
+        <result property="description" column="description"/>
+        <result property="timeLength" column="time_length"/>
+        <result property="createtime" column="createtime"/>
+        <result property="labelids" column="labelids"/>
+        <result property="imgUrl" column="img_url"/>
+        <result property="labelnames" column="labelnames"/>
+        <result property="playCnt" column="play_cnt"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,url,description,time_length,createtime,labelids,img_url,labelnames,play_cnt
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_audio (
+        	id ,
+        	url ,
+        	description ,
+        	time_length ,
+        	createtime ,
+        	labelids ,
+        	img_url ,
+        	labelnames,
+        	play_cnt 
+        ) VALUES (
+        	#{id} ,
+        	#{url} ,
+        	#{description} ,
+        	#{timeLength} ,
+        	#{createtime} ,
+        	#{labelids} ,
+        	#{imgUrl} ,
+        	#{labelnames},
+        	0
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+    <![CDATA[
+        UPDATE sp_audio SET
+	        url = #{url} ,
+	        description = #{description} ,
+	        time_length = #{timeLength} ,
+	        createtime = #{createtime} ,
+	        labelids = #{labelids} ,
+	        img_url = #{imgUrl} ,
+	        labelnames = #{labelnames},
+	        play_cnt = #{playCnt}
+        WHERE 
+	        id = #{id} 
+    ]]>
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_audio WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="Audio">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_audio 
+	        WHERE 
+		        id = #{id} 
+	    ]]>
+	</select>
+		
+    <update id="updateAudioPlayCnt">
+       UPDATE sp_audio SET play_cnt = play_cnt+1 WHERE id = #{id} 
+    </update>
+    
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 offset,pageSize,lastRows 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="findPage" resultMap="Audio">
+    	SELECT <include refid="columns" />
+	    FROM sp_audio 
+    </select>
+	
+</mapper>
+

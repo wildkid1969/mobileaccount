@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.OfflineRegisterUserMapper">
+
+	<resultMap id="OfflineRegisterUser" type="com.hc360.mobileaccount.po.OfflineRegisterUser">
+        <result property="userid" column="userid"/>
+        <result property="name" column="name"/>
+        <result property="phone" column="phone"/>
+        <result property="qq" column="qq"/>
+        <result property="createtime" column="createtime"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			userid,name,phone,qq,createtime
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="userid">
+    <![CDATA[
+        INSERT INTO sp_offline_register_user (
+        	userid ,
+        	name ,
+        	phone ,
+        	qq ,
+        	createtime 
+        ) VALUES (
+         	#{userid},
+         	#{name},
+         	#{phone},
+         	#{qq},
+         	NOW()
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_offline_register_user
+        <set>
+			<if test="name != null and name != ''">
+	        	name = #{name} ,
+	        </if>
+			<if test="phone != null and phone != ''">
+	        	phone = #{phone} ,
+	        </if>
+			<if test="qq != null and qq != ''">
+	        	qq = #{qq} ,
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	createtime = #{createtime} 
+	        </if>
+	    </set>
+        WHERE 
+	        userid = #{userid} 
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_offline_register_user WHERE
+        userid = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="OfflineRegisterUser">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_offline_register_user 
+	        WHERE 
+		        userid = #{id} 
+	    ]]>
+	</select>
+    <select id="getByPhone" resultMap="OfflineRegisterUser">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_offline_register_user 
+	        WHERE 
+		        phone = #{phone} 
+	    ]]>
+	</select>
+		
+    <select id="getOfflineRegisterUserList" resultMap="OfflineRegisterUser">
+    	SELECT <include refid="columns" />
+	    FROM sp_offline_register_user 
+	    <where>
+			<if test="name != null and name != ''">
+	        	and name = #{name}
+	        </if>
+			<if test="phone != null and phone != ''">
+	        	and phone = #{phone}
+	        </if>
+			<if test="qq != null and qq != ''">
+	        	and qq = #{qq}
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	and createtime = #{createtime}
+	        </if>
+	    </where>
+    </select>
+
+	
+</mapper>
+

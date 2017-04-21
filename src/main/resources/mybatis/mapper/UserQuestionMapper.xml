@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.UserQuestionMapper">
+
+	<resultMap id="UserQuestion" type="com.hc360.mobileaccount.po.UserQuestion">
+        <result property="id" column="id"/>
+        <result property="userid" column="userid"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="createtime" column="createtime"/>
+        <result property="praiseCnt" column="praise_cnt"/>
+        <result property="audioUrl" column="audio_url"/>
+        <result property="timeLength" column="time_length"/>
+        <result property="labelids" column="labelids"/>
+        <result property="labelnames" column="labelnames"/>
+        <result property="isTop" column="is_top"/>
+        
+        <result property="replyCnt" column="replyCnt"/>
+        
+        <collection property="user" ofType="Account">
+        	<result property="accountid" column="accountid"/>
+			<result property="headerimg" column="headerimg"/>
+			<result property="nickname" column="nickname"/>
+			<result property="corpname" column="corpname"/>
+        </collection>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,userid,title,content,createtime,praise_cnt,audio_url,time_length,labelids,labelnames,is_top
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_user_question (
+        	id ,
+        	userid ,
+        	title ,
+        	content ,
+        	createtime ,
+        	praise_cnt ,
+        	audio_url ,
+        	time_length ,
+        	labelids ,
+        	labelnames 
+        ) VALUES (
+         	#{id},
+         	#{userid},
+         	#{title},
+         	#{content},
+         	NOW(),
+         	0,
+         	#{audioUrl},
+         	#{timeLength},
+         	#{labelids},
+         	#{labelnames}
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_user_question
+        <set>
+			<if test="userid != null and userid != ''">
+	        	userid = #{userid} ,
+	        </if>
+			<if test="title != null and title != ''">
+	        	title = #{title} ,
+	        </if>
+			<if test="content != null and content != ''">
+	        	content = #{content} ,
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	createtime = #{createtime} ,
+	        </if>
+			<if test="praiseCnt != null and praiseCnt != ''">
+	        	praise_cnt = #{praiseCnt} ,
+	        </if>
+			<if test="audioUrl != null and audioUrl != ''">
+	        	audio_url = #{audioUrl} ,
+	        </if>
+			<if test="timeLength != null and timeLength != ''">
+	        	time_length = #{timeLength} ,
+	        </if>
+			<if test="labelids != null and labelids != ''">
+	        	labelids = #{labelids} ,
+	        </if>
+			<if test="labelnames != null and labelnames != ''">
+	        	labelnames = #{labelnames} 
+	        </if>
+	    </set>
+        WHERE 
+	        id = #{id} 
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_user_question WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <!-- 删除老师的邀请 -->
+    <delete id="deleteTeacherReplyInvited">
+        DELETE FROM sp_teacher_reply_invited WHERE invitedid = #{id}  AND type = 2
+    </delete>
+    <!-- 删除用户回复内容 -->
+    <delete id="deleteUserReply">
+        DELETE FROM sp_user_reply WHERE id IN (SELECT replyid FROM sp_user_n_reply WHERE reply_type=4 AND objectid = #{id})
+    </delete>
+    <!-- 删除用户关联的回复 -->
+    <delete id="deleteUserNReply">
+        DELETE FROM sp_user_n_reply WHERE reply_type=4 AND objectid = #{id}
+    </delete>
+    
+    <!-- 问题详情   回复数为一级回复-->
+    <select id="getById" resultMap="UserQuestion">
+		SELECT uq.*,i.accountid,i.headerimg,i.nickname,i.corpname,if(a.replyCnt>0,a.replyCnt,0) replyCnt
+	    FROM sp_user_question uq
+	    LEFT JOIN p_account_info i ON i.accountid = uq.userid
+	    LEFT JOIN (SELECT count(1) replyCnt,objectid FROM sp_user_n_reply WHERE reply_type=4 AND linkid IS NULL GROUP BY objectid )a ON a.objectid=uq.id
+		WHERE uq.id = #{id} 
+	</select>
+	
+	<!-- 问题列表   回复数为一级回复-->
+    <select id="getUserQuestionList" resultMap="UserQuestion">
+    	SELECT uq.*,i.accountid,i.headerimg,i.nickname,i.corpname,if(a.replyCnt>0,a.replyCnt,0) replyCnt
+	    FROM sp_user_question uq
+	    LEFT JOIN p_account_info i ON i.accountid = uq.userid
+	    LEFT JOIN (SELECT count(1) replyCnt,objectid FROM sp_user_n_reply WHERE reply_type=4 AND linkid IS NULL GROUP BY objectid )a ON a.objectid=uq.id
+	    <where>
+			<if test="userid != null and userid != ''">
+	        	and uq.userid = #{userid}
+	        </if>
+			<if test="labelids != null and labelids != ''">
+	        	and uq.labelids = #{labelids}
+	        </if>
+	    </where>
+	    ORDER BY uq.createtime DESC 
+		LIMIT #{start},#{size}
+    </select>
+    
+	<select id="getUserQuestionCount" resultType="Integer">
+		select count(1) from sp_user_question
+		<where>
+			<if test="userid != null and userid != ''">
+	        	and userid = #{userid}
+	        </if>
+			<if test="labelids != null and labelids != ''">
+	        	and labelids = #{labelids}
+	        </if>
+	    </where>
+	</select>
+	
+	
+	<!-- 获取置顶的问题   回复数为一级回复-->
+	<select id="getUserTopQuestionList" resultMap="UserQuestion">
+    	SELECT uq.*,i.accountid,i.headerimg,i.nickname,i.corpname,if(a.replyCnt>0,a.replyCnt,0) replyCnt
+	    FROM sp_user_question uq
+	    LEFT JOIN p_account_info i ON i.accountid = uq.userid
+	    LEFT JOIN (SELECT count(1) replyCnt,objectid FROM sp_user_n_reply WHERE reply_type=4 AND linkid IS NULL GROUP BY objectid )a ON a.objectid=uq.id
+	    WHERE is_top=1
+	    ORDER BY uq.createtime DESC 
+    </select>
+    
+    <select id="getMyQuestionIdList" resultType="Long">
+    	SELECT id FROM sp_user_question
+	    <where>
+			<if test="userid != null and userid != ''">
+	        	and userid = #{userid}
+	        </if>
+	    </where>
+    </select>
+</mapper>
+

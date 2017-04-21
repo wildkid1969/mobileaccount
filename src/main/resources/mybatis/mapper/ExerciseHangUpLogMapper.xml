@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.ExerciseHangUpLogMapper">
+
+	<resultMap id="ExerciseHangUpLog" type="com.hc360.mobileaccount.po.ExerciseHangUpLog">
+        <result property="id" column="id"/>
+        <result property="userid" column="userid"/>
+        <result property="roomid" column="roomid"/>
+        <result property="createtime" column="createtime"/>
+        <result property="type" column="type"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,userid,roomid,createtime,type
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_exercise_hang_up_log (
+        	id ,
+        	userid ,
+        	roomid ,
+        	createtime ,
+        	type 
+        ) VALUES (
+         	#{id},
+         	#{userid},
+         	#{roomid},
+         	NOW(),
+         	#{type}
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_exercise_hang_up_log
+        <set>
+			<if test="userid != null and userid != ''">
+	        	userid = #{userid} ,
+	        </if>
+			<if test="roomid != null and roomid != ''">
+	        	roomid = #{roomid} ,
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	createtime = #{createtime} ,
+	        </if>
+			<if test="type != null and type != ''">
+	        	type = #{type} 
+	        </if>
+	    </set>
+        WHERE 
+	        id = #{id} 
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_exercise_hang_up_log WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getByRoomid" resultMap="ExerciseHangUpLog">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_exercise_hang_up_log 
+	        WHERE 
+		        roomid = #{roomid} 
+	    ]]>
+	</select>
+		
+    <select id="getExerciseHangUpLogList" resultMap="ExerciseHangUpLog">
+    	SELECT <include refid="columns" />
+	    FROM sp_exercise_hang_up_log 
+	    <where>
+			<if test="userid != null and userid != ''">
+	        	and userid = #{userid}
+	        </if>
+			<if test="roomid != null and roomid != ''">
+	        	and roomid = #{roomid}
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	and createtime = #{createtime}
+	        </if>
+			<if test="type != null and type != ''">
+	        	and type = #{type}
+	        </if>
+	    </where>
+    </select>
+
+	
+</mapper>
+

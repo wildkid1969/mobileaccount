@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.OfflineChapterMapper">
+
+	<resultMap id="OfflineChapter" type="com.hc360.mobileaccount.po.OfflineChapter">
+        <result property="chapterid" column="chapterid"/>
+        <result property="chapterNumber" column="chapter_number"/>
+        <result property="chapterName" column="chapter_name"/>
+        <result property="description" column="description"/>
+        <result property="classid" column="classid"/>
+        <result property="timeLength" column="time_length"/>
+        <result property="price" column="price"/>
+        <result property="audiences" column="audiences"/>
+        <result property="gains" column="gains"/>
+        <result property="createtime" column="createtime"/>
+        <result property="state" column="state"/>
+        
+        <result property="teacherid" column="teacherid"/>
+        <result property="teacherName" column="teacherName"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			chapterid,chapter_number,chapter_name,description,classid,time_length,price,audiences,gains,createtime,state
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="chapterid">
+    <![CDATA[
+        INSERT INTO sp_offline_chapter (
+        	chapterid ,
+        	chapter_number ,
+        	chapter_name ,
+        	description ,
+        	classid ,
+        	time_length ,
+        	price ,
+        	audiences ,
+        	gains ,
+        	createtime ,
+        	state 
+        ) VALUES (
+         	#{chapterid},
+         	#{chapterNumber},
+         	#{chapterName},
+         	#{description},
+         	#{classid},
+         	#{timeLength},
+         	#{price},
+         	#{audiences},
+         	#{gains},
+         	NOW(),
+         	#{state}
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_offline_chapter
+        <set>
+			<if test="chapterNumber != null and chapterNumber != ''">
+	        	chapter_number = #{chapterNumber} ,
+	        </if>
+			<if test="chapterName != null and chapterName != ''">
+	        	chapter_name = #{chapterName} ,
+	        </if>
+			<if test="description != null and description != ''">
+	        	description = #{description} ,
+	        </if>
+			<if test="classid != null and classid != ''">
+	        	classid = #{classid} ,
+	        </if>
+			<if test="timeLength != null and timeLength != ''">
+	        	time_length = #{timeLength} ,
+	        </if>
+			<if test="price != null and price != ''">
+	        	price = #{price} ,
+	        </if>
+			<if test="audiences != null and audiences != ''">
+	        	audiences = #{audiences} ,
+	        </if>
+			<if test="gains != null and gains != ''">
+	        	gains = #{gains} ,
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	createtime = #{createtime} ,
+	        </if>
+			<if test="state != null and state != ''">
+	        	state = #{state} 
+	        </if>
+	    </set>
+        WHERE 
+	        chapterid = #{chapterid} 
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_offline_chapter WHERE
+        chapterid = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="OfflineChapter">
+		SELECT oc.*,ot.teacherid,ot.`name` AS teacherName FROM sp_offline_chapter  oc
+		LEFT JOIN sp_offline_teacher_n_class tnc ON tnc.classid=oc.classid
+		LEFT JOIN sp_offline_teacher ot ON ot.teacherid=tnc.teacherid
+	    WHERE chapterid = #{id} 
+	</select>
+		
+    <select id="getOfflineChapterList" resultMap="OfflineChapter">
+    	SELECT chapterid,chapter_number,chapter_name,classid,time_length,price,audiences,createtime,state
+	    FROM sp_offline_chapter 
+	    <where>
+	    	state = 1
+			<if test="chapterNumber != null and chapterNumber != ''">
+	        	and chapter_number = #{chapterNumber}
+	        </if>
+			<if test="chapterName != null and chapterName != ''">
+	        	and chapter_name = #{chapterName}
+	        </if>
+			<if test="description != null and description != ''">
+	        	and description = #{description}
+	        </if>
+			<if test="classid != null and classid != ''">
+	        	and classid = #{classid}
+	        </if>
+			<if test="timeLength != null and timeLength != ''">
+	        	and time_length = #{timeLength}
+	        </if>
+			<if test="price != null and price != ''">
+	        	and price = #{price}
+	        </if>
+			<if test="audiences != null and audiences != ''">
+	        	and audiences = #{audiences}
+	        </if>
+			<if test="gains != null and gains != ''">
+	        	and gains = #{gains}
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	and createtime = #{createtime}
+	        </if>
+			<if test="state != null and state != ''">
+	        	and state = #{state}
+	        </if>
+	    </where>
+    </select>
+    
+    <select id="getOfflineChapterCount" resultType="Integer">
+    	SELECT COUNT(1)
+	    FROM sp_offline_chapter 
+	    <where>
+	    	state = 1
+			<if test="chapterNumber != null and chapterNumber != ''">
+	        	and chapter_number = #{chapterNumber}
+	        </if>
+			<if test="chapterName != null and chapterName != ''">
+	        	and chapter_name = #{chapterName}
+	        </if>
+			<if test="description != null and description != ''">
+	        	and description = #{description}
+	        </if>
+			<if test="classid != null and classid != ''">
+	        	and classid = #{classid}
+	        </if>
+			<if test="timeLength != null and timeLength != ''">
+	        	and time_length = #{timeLength}
+	        </if>
+			<if test="price != null and price != ''">
+	        	and price = #{price}
+	        </if>
+			<if test="audiences != null and audiences != ''">
+	        	and audiences = #{audiences}
+	        </if>
+			<if test="gains != null and gains != ''">
+	        	and gains = #{gains}
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	and createtime = #{createtime}
+	        </if>
+	    </where>
+    </select>
+
+	
+</mapper>
+

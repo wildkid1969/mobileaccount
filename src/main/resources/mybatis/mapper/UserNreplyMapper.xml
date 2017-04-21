@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.UserNreplyMapper">
+
+	<resultMap id="UserNreply" type="com.hc360.mobileaccount.po.UserNreply">
+        <result property="id" column="id"/>
+        <result property="objectid" column="objectid"/>
+        <result property="userid" column="userid"/>
+        <result property="linkid" column="linkid"/>
+        <result property="replyid" column="replyid"/>
+        <result property="replyType" column="reply_type"/>
+        <result property="userType" column="user_type"/>
+	</resultMap>
+	
+	<resultMap id="HotUserReply" type="com.hc360.mobileaccount.po.UserNreply">
+        <result property="id" column="id"/>
+        <result property="content" column="content"/>
+        <result property="imgUrl" column="img_url"/>
+        <result property="audioUrl" column="audio_url"/>
+        <result property="timeLength" column="time_length"/>
+        <result property="createtime" column="createtime"/>
+        <result property="praiseCnt" column="praise_cnt"/>
+        
+        <result property="userid" column="userid"/>
+        <result property="objectid" column="objectid"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,objectid,userid,linkid,replyid,reply_type,user_type
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_user_n_reply (
+        	id ,
+        	objectid ,
+        	userid ,
+        	linkid ,
+        	replyid ,
+        	reply_type ,
+        	user_type 
+        ) VALUES (
+        	#{id} ,
+        	#{objectid} ,
+        	#{userid} ,
+        	#{linkid} ,
+        	#{replyid} ,
+        	#{replyType} ,
+        	#{userType} 
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+    <![CDATA[
+        UPDATE sp_user_n_reply SET
+	        objectid = #{objectid} ,
+	        userid = #{userid} ,
+	        linkid = #{linkid} ,
+	        replyid = #{replyid} ,
+	        reply_type = #{replyType} ,
+	        user_type = #{userType} 
+        WHERE 
+	        id = #{id} 
+    ]]>
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_user_n_reply WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="UserNreply">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_user_n_reply 
+	        WHERE 
+		        id = #{id} 
+	    ]]>
+	</select>
+	
+	<select id="getHotUserReply" resultMap="HotUserReply">
+    	SELECT tt.* FROM(SELECT ur.*,unr.objectid,unr.userid FROM sp_user_n_reply unr
+						LEFT JOIN sp_user_reply ur ON ur.id=unr.replyid
+						WHERE unr.reply_type=#{replyType} <if test="objectid==null or objectid==''">AND ur.praise_cnt>=5</if>
+						ORDER BY ur.createtime DESC)tt
+		<if test="objectid!=null and objectid!=''">
+			WHERE objectid=#{objectid}
+			ORDER BY tt.praise_cnt DESC
+		</if>
+		<if test="objectid==null or objectid==''">
+			GROUP BY objectid
+			ORDER BY tt.createtime DESC
+			LIMIT #{size}
+		</if>
+    </select>
+    
+    <select id="getUserReplyCount" resultType="Integer">
+    	SELECT COUNT(1) FROM sp_user_n_reply 
+    	WHERE reply_type=#{replyType} AND objectid=#{objectid}
+    	<if test="userid!=null and userid!=''">
+    		AND userid = #{userid}
+    	</if>
+    </select>
+    <select id="getUserPraiseCount" resultType="Integer">
+     	SELECT if(SUM(ur.praise_cnt)>0,SUM(ur.praise_cnt),0)  FROM sp_user_n_reply unr
+		LEFT JOIN sp_user_reply ur ON ur.id=unr.replyid
+		WHERE reply_type=#{replyType} AND objectid=#{objectid}
+    </select>
+    
+    <!-- 我参与的问题列表 -->
+    <select id="getMyRelatedQuestionIdList" resultType="Long">
+     	SELECT objectid FROM sp_user_n_reply WHERE userid=#{userid} AND reply_type=4
+		GROUP BY objectid
+    </select>
+    
+    
+    <!-- 删除用户的回复 -->
+    <delete id="deleteUserReply">
+		DELETE FROM sp_user_reply WHERE id =#{replyid}
+	</delete>	
+	<delete id="deleteUserNReply">
+		DELETE FROM sp_user_n_reply WHERE reply_type=#{replyType} AND replyid=#{replyid} AND userid=#{userid}
+	</delete>	
+	
+</mapper>
+

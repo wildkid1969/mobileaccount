@@ -1,0 +1,20 @@
+#set($layout="/layout/none.html")
+
+<p>通过RequestToViewNameTranslator自动解析到视图/views/showcase/returntype/list.html。</p>
+<p>返回类型为List&lt;User&gt;，相当于调用model.addAttribute("userList", list)，所以可直接在页面上使用userList</p>
+
+
+<table class="table">
+	<tr>
+		<td>id</td>
+		<td>name</td>
+		<td>age</td>		
+    </tr>
+	#foreach($u in $list)
+	<tr>
+		<td>$u.device_id</td>
+		<td>$u.username</td>
+		<td>$u.device_type</td>		
+    </tr>
+	#end
+</table>

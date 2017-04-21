@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.hc360.mobileaccount.dao.PaccountFreechargeLogMapper">
+
+	<resultMap id="PaccountFreechargeLog" type="com.hc360.mobileaccount.po.PaccountFreechargeLog">
+        <result property="id" column="id"/>
+        <result property="phone" column="phone"/>
+        <result property="charge" column="charge"/>
+        <result property="createtime" column="createtime"/>
+        <result property="updatetime" column="updatetime"/>
+        <result property="isUsed" column="is_used"/>
+        <result property="type" column="type"/>
+        <result property="remark" column="remark"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,phone,charge,createtime,is_used
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO p_account_freecharge_log (
+        	id ,
+        	phone ,
+        	charge ,
+        	createtime,
+        	updatetime,
+        	is_used,
+        	type,
+        	remark
+        ) VALUES (
+        	#{id} ,
+        	#{phone} ,
+        	#{charge} ,
+        	#{createtime},
+        	#{updatetime},
+        	#{isUsed},
+        	#{type},
+        	#{remark}
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+	
+	<update id="updateState" parameterType="map">
+    <![CDATA[
+        UPDATE p_account_freecharge_log SET
+	        is_used = 1,updatetime = NOW()
+        WHERE 
+	        phone= #{phone} AND type = #{type}
+    ]]>
+	</update>
+    
+    <select id="getByPhone" parameterType="map" resultMap="PaccountFreechargeLog">
+	    SELECT <include refid="columns"/>
+	    <![CDATA[
+	        FROM p_account_freecharge_log where phone = #{phone} AND type = #{type}
+	    ]]>
+    </select>
+    
+    <select id="getFreechargeLogList" parameterType="map" resultMap="PaccountFreechargeLog">
+    	SELECT <include refid="columns"/>
+	    <![CDATA[
+	        FROM p_account_freecharge_log where is_used = #{isUsed} AND type = #{type}
+	    ]]>
+    </select>
+	
+</mapper>
+

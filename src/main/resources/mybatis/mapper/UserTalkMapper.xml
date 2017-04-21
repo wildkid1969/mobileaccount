@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.UserTalkMapper">
+
+	<resultMap id="UserTalk" type="com.hc360.mobileaccount.po.UserTalk">
+        <result property="id" column="id"/>
+        <result property="userid" column="userid"/>
+        <result property="audioUrl" column="audio_url"/>
+        <result property="isShowName" column="is_show_name"/>
+        <result property="content" column="content"/>
+        <result property="labelids" column="labelids"/>
+        <result property="createtime" column="createtime"/>
+        <result property="labelnames" column="labelnames"/>
+        <result property="timeLength" column="time_length"/>
+        
+        <collection property="user" ofType="Account">
+        	<result property="accountid" column="accountid"/>
+			<result property="headerimg" column="headerimg"/>
+			<result property="nickname" column="nickname"/>
+			<result property="corpname" column="corpname"/>
+        </collection>
+	</resultMap>
+	
+	<resultMap id="User" type="com.hc360.mobileaccount.po.Account">
+		<result property="accountid" column="accountid"/>
+		<result property="headerimg" column="headerimg"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,userid,audio_url,is_show_name,content,labelids,createtime,labelnames,time_length
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_user_talk (
+        	id ,
+        	userid ,
+        	audio_url ,
+        	is_show_name ,
+        	content ,
+        	labelids ,
+        	createtime ,
+        	labelnames ,
+        	time_length
+        ) VALUES (
+        	#{id} ,
+        	#{userid} ,
+        	#{audioUrl} ,
+        	#{isShowName} ,
+        	#{content} ,
+        	#{labelids} ,
+        	NOW() ,
+        	#{labelnames} ,
+        	#{timeLength} 
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+    <![CDATA[
+        UPDATE sp_user_talk SET
+	        userid = #{userid} ,
+	        audio_url = #{audioUrl} ,
+	        is_show_name = #{isShowName} ,
+	        content = #{content} ,
+	        labelids = #{labelids} ,
+	        createtime = #{createtime} ,
+	        labelnames = #{labelnames} ,
+	        time_length = #{timeLength} 
+        WHERE 
+	        id = #{id} 
+    ]]>
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_user_talk WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="UserTalk">
+		SELECT ut.*,i.accountid,i.headerimg,i.nickname,i.corpname
+	    FROM sp_user_talk ut
+	    LEFT JOIN p_account_info i ON i.accountid = ut.userid
+	    WHERE ut.id = #{id}
+	</select>
+		
+    
+    <!--
+    	分页查询已经使用Dialect进行分页,也可以不使用Dialect直接编写分页
+    	因为分页查询将传 offset,pageSize,lastRows 三个参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+    -->
+    <select id="getUserTalkList" resultMap="UserTalk">
+    	SELECT ut.*,i.headerimg,i.nickname,i.corpname
+	    FROM sp_user_talk ut
+	    LEFT JOIN p_account_info i ON i.accountid = ut.userid
+	    <where>
+	    	<if test="userid!=null and userid!=''">
+	    		and ut.userid = #{userid}
+	    	</if>
+	    </where>
+	    ORDER BY ut.createtime DESC
+	    LIMIT #{start},#{size}
+    </select>
+    
+    <select id="getTodayTalkUsers" resultMap="User">
+    	SELECT i.accountid,i.headerimg FROM sp_user_talk ut 
+		LEFT JOIN p_account_info i ON ut.userid = i.accountid
+		WHERE date(ut.createtime) = #{dateStr} AND ut.createtime IS NOT NULL
+		GROUP BY ut.userid
+		ORDER BY ut.createtime DESC
+		LIMIT 50
+    </select>
+    
+    
+    <select id="getUserTalkCount" resultType="Integer">
+    	SELECT count(1) FROM sp_user_talk
+    	<where>
+    		<if test="userid!=null and userid!=''">
+	    		userid =  #{userid}
+	    	</if>
+    	</where>
+    </select>
+
+	
+</mapper>
+

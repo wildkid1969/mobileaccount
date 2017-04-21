@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hc360.mobileaccount.daooracle.Data114Mapper">
+	<select id="selectCorpInfo" resultType="CorpInfo" parameterType="String">
+		SELECT
+				corpid AS corpid,
+				corp_name AS corpname,
+				address AS address,
+				Business_license_code AS businesslicensecode,
+				legal_person AS legalperson,
+				createTime AS createTime,
+				keep_phone AS keepphone,
+				Registered_capital AS registeredcapital,
+				currency_type AS currencytype,
+				main_products AS mainproducts,
+				main_area AS mainarea,
+				Business_address AS businessaddress,
+				special_market AS specialmarket,
+				enterpriseType AS enterpriseType,
+				corp_linkman AS corplinkman,
+				longitude AS longitude,
+				latitude AS latitude,
+				login_date AS logindate,
+				Organization_code AS organizationcode,
+				areaid AS areaid,
+				operating_status AS operatingstatus,
+				Brand_name AS brandname,
+				person_message AS personmessage,
+				searchdate AS searchdate,
+				searchstate AS searchstate,
+				loadstates AS loadstates,
+				datagrade AS datagrade,
+				qualitygrade AS qualitygrade,
+				province AS province,
+				city AS city,
+				ismodify AS ismodify,
+				iscomm AS iscomm,
+				source_quality AS sourcequality,
+				introduce AS introduce,
+				username AS username
+		FROM
+			provider_yellowpage
+		WHERE
+			corp_name = #{corpname}
+	</select>
+
+	<select id="getCorpInfoByMp" resultType="String" parameterType="String">
+		SELECT
+			corp_name
+		FROM
+			provider_yellowpage
+		WHERE
+			main_products = #{mp}
+			AND rownum <![CDATA[<=]]> 100
+	</select>
+
+	<select id="selectCountByName" resultType="int" parameterType="String">
+		SELECT
+				COUNT(corpid)
+		FROM
+			provider_yellowpage
+		WHERE
+			corp_name = #{corpname}
+	</select>
+
+	<select id="selectCorpInfoByid" resultType="CorpInfo" parameterType="String">
+		SELECT
+				corpid AS corpid,
+				corp_name AS corpname,
+				address AS address,
+				Business_license_code AS businesslicensecode,
+				legal_person AS legalperson,
+				to_char(createTime,'yyyy-MM-dd HH24:mi:ss')  AS createTime,
+				keep_phone AS keepphone,
+				Registered_capital AS registeredcapital,
+				currency_type AS currencytype,
+				main_products AS mainproducts,
+				main_area AS mainarea,
+				Business_address AS businessaddress,
+				special_market AS specialmarket,
+				enterpriseType AS enterpriseType,
+				corp_linkman AS corplinkman,
+				longitude AS longitude,
+				latitude AS latitude,
+				to_char(login_date,'yyyy-MM-dd HH24:mi:ss') AS logindate,
+				Organization_code AS organizationcode,
+				areaid AS areaid,
+				operating_status AS operatingstatus,
+				Brand_name AS brandname,
+				person_message AS personmessage,
+				searchdate AS searchdate,
+				searchstate AS searchstate,
+				loadstates AS loadstates,
+				datagrade AS datagrade,
+				qualitygrade AS qualitygrade,
+				province AS province,
+				city AS city,
+				ismodify AS ismodify,
+				iscomm AS iscomm,
+				source_quality AS sourcequality,
+				introduce AS introduce,
+				username AS username
+		FROM
+			provider_yellowpage
+		WHERE
+			corpid = #{corpid}
+	</select>
+
+	<select id="selectAccessCorp" resultType="CorpInfoExt" parameterType="long">
+		select ID,CORPID,ACCESSNUM,CALLNUM,CALLEDNUM,CALLEDRATE from provider_yellowpage_ext where CORPID = #{corpid}
+	</select>
+
+	<insert id="saveAccessCorp" parameterType="CorpInfoExt">
+		insert into provider_yellowpage_ext (ID,CORPID,ACCESSNUM,CALLNUM,CALLEDNUM,CALLEDRATE,CREATETIME,UPDATETIME) 
+		values (provider_yellowpage_ext_seq.nextval,#{corpid},#{accessnum},#{callnum},#{callednum},#{calledrate},systimestamp,systimestamp)
+	</insert>
+
+	<update id="updateAccessCorp" parameterType="CorpInfoExt">
+		update provider_yellowpage_ext 
+		set ACCESSNUM=#{accessnum},
+			  CALLNUM=#{callnum},
+			  CALLEDNUM=#{callednum},
+			  CALLEDRATE=#{calledrate},
+			  UPDATETIME=systimestamp
+		where id = #{id}
+	</update>
+
+	<update id="updateComm" parameterType="Map">
+		update provider_yellowpage
+		set iscomm = ${mark}
+		where
+		corpid = ${corpid}
+	</update>
+
+	<select id="countNum" resultType="Integer" parameterType="String">
+		SELECT
+			COUNT(1)
+		FROM
+			provider_yellowpage
+		WHERE
+			INSTR(corp_name, #{corpname}) > 0
+	</select>
+
+	<select id="selectLikeCorpInfo" resultType="CorpInfo" parameterType="Map">
+		SELECT 
+			corpid,
+			corpname,
+			address,
+			businesslicensecode,
+			legalperson,
+			createTime,
+			keepphone,
+			registeredcapital,
+			currencytype,
+			mainproducts,
+			mainarea,
+			businessaddress,
+			specialmarket,
+			enterpriseType,
+			corplinkman,
+			longitude,
+			latitude,
+			logindate,
+			organizationcode,
+			areaid,
+			operatingstatus,
+			brandname,
+			personmessage,
+			searchdate,
+			searchstate,
+			loadstates,
+			datagrade,
+			qualitygrade,
+			province,
+			city,
+			ismodify,
+			iscomm,
+			sourcequality,
+			introduce,
+			username
+		FROM 
+		(
+			SELECT
+				corpid AS corpid,
+				corp_name AS corpname,
+				address AS address,
+				Business_license_code AS businesslicensecode,
+				legal_person AS legalperson,
+				createTime AS createTime,
+				keep_phone AS keepphone,
+				Registered_capital AS registeredcapital,
+				currency_type AS currencytype,
+				main_products AS mainproducts,
+				main_area AS mainarea,
+				Business_address AS businessaddress,
+				special_market AS specialmarket,
+				enterpriseType AS enterpriseType,
+				corp_linkman AS corplinkman,
+				longitude AS longitude,
+				latitude AS latitude,
+				login_date AS logindate,
+				Organization_code AS organizationcode,
+				areaid AS areaid,
+				operating_status AS operatingstatus,
+				Brand_name AS brandname,
+				person_message AS personmessage,
+				searchdate AS searchdate,
+				searchstate AS searchstate,
+				loadstates AS loadstates,
+				datagrade AS datagrade,
+				qualitygrade AS qualitygrade,
+				province AS province,
+				city AS city,
+				ismodify AS ismodify,
+				iscomm AS iscomm,
+				source_quality AS sourcequality,
+				introduce AS introduce,
+				username AS username,
+				ROWNUM AS rn
+			FROM
+				provider_yellowpage
+			WHERE
+				INSTR(corp_name, #{corpname}) > 0
+				AND ROWNUM <![CDATA[<=]]> #{end}
+		) t
+		WHERE
+			t.rn >= #{begin}
+	</select>
+
+	<update id="updateCorpInfo" parameterType="CorpInfo">
+		UPDATE
+			provider_yellowpage
+		<set>
+			<if test="address != null and address != ''">
+				ADDRESS=#{address},
+			</if>
+			<if test="businesslicensecode != null and businesslicensecode != ''">
+				BUSINESS_LICENSE_CODE=#{businesslicensecode},
+			</if>
+			<if test="legalperson != null and legalperson != ''">
+				LEGAL_PERSON=#{legalperson},
+			</if>
+			<if test="createTime != null and createTime != ''">
+				CREATETIME=to_date(#{createTime},'yyyy-MM-dd HH24:mi:ss'),
+			</if>
+			<if test="keepphone != null and keepphone != ''">
+				KEEP_PHONE=#{keepphone},
+			</if>
+			<if test="registeredcapital != null and registeredcapital != ''">
+				REGISTERED_CAPITAL=#{registeredcapital},
+			</if>
+			<if test="currencytype != null and currencytype != ''">
+				CURRENCY_TYPE=#{currencytype},
+			</if>
+			<if test="mainproducts != null and mainproducts != ''">
+				MAIN_PRODUCTS=#{mainproducts},
+			</if>
+			<if test="mainarea != null and mainarea != ''">
+				MAIN_AREA=#{mainarea},
+			</if>
+			<if test="businessaddress != null and businessaddress != ''">
+				BUSINESS_ADDRESS=#{businessaddress},
+			</if>
+			<if test="specialmarket != null and specialmarket != ''">
+				SPECIAL_MARKET=#{specialmarket},
+			</if>
+			<if test="enterpriseType != null and enterpriseType != ''">
+				ENTERPRISETYPE=#{enterpriseType},
+			</if>
+			<if test="corplinkman != null and corplinkman != ''">
+				CORP_LINKMAN=#{corplinkman},
+			</if>
+			<if test="logindate != null and logindate != ''">
+				LOGIN_DATE=to_date(#{logindate},'yyyy-MM-dd HH24:mi:ss'),
+			</if>
+			<if test="organizationcode != null and organizationcode != ''">
+				ORGANIZATION_CODE=#{organizationcode},
+			</if>
+			<if test="areaid != null and areaid != ''">
+				AREAID=#{areaid},
+			</if>
+			<if test="operatingstatus != null and operatingstatus != ''">
+				OPERATING_STATUS=#{operatingstatus},
+			</if>
+			<if test="brandname != null and brandname != ''">
+				BRAND_NAME=#{brandname},
+			</if>
+			<if test="personmessage != null and personmessage != ''">
+				PERSON_MESSAGE=#{personmessage},
+			</if>
+			<if test="datagrade != null and datagrade != ''">
+				DATAGRADE=#{datagrade},
+			</if>
+			<if test="province != null and province != ''">
+				PROVINCE=#{province},
+			</if>
+			<if test="city != null and city != ''">
+				CITY=#{city},
+			</if>
+			<if test="introduce != null and introduce != ''">
+				INTRODUCE=#{introduce},
+			</if>
+			<if test="true">
+				ISMODIFY=1,SEARCHSTATE=1,
+			</if>
+			<if test="iscomm != null and iscomm != ''">
+				ISCOMM=#{iscomm}
+			</if>
+		</set>
+		WHERE 
+			CORPID = #{corpid}
+	</update>
+
+	<insert id="insertCorpInfo" parameterType="CorpInfo">
+		INSERT INTO provider_yellowpage 
+		(
+			CORPID,
+			CORP_NAME,
+			ADDRESS,
+			BUSINESS_LICENSE_CODE,
+			LEGAL_PERSON,
+			CREATETIME,
+			KEEP_PHONE,
+			REGISTERED_CAPITAL,
+			CURRENCY_TYPE,
+			MAIN_PRODUCTS,
+			MAIN_AREA,
+			BUSINESS_ADDRESS,
+			SPECIAL_MARKET,
+			ENTERPRISETYPE,
+			CORP_LINKMAN,
+			LONGITUDE,
+			LATITUDE,
+			LOGIN_DATE,
+			ORGANIZATION_CODE,
+			AREAID,
+			OPERATING_STATUS,
+			BRAND_NAME,
+			PERSON_MESSAGE,
+			SEARCHDATE,
+			SEARCHSTATE,
+			LOADSTATES,
+			DATAGRADE,
+			QUALITYGRADE,
+			PROVINCE,
+			CITY,
+			ISMODIFY,
+			ISCOMM,
+			SOURCE_QUALITY,
+			INTRODUCE,
+			USERNAME
+		) 
+		VALUES 
+		(
+			PROVIDER_YELLOWPAGE_QY114_SEQ.NEXTVAL,
+			#{corpname},
+			#{address},
+			#{businesslicensecode},
+			#{legalperson},
+			to_date(#{createTime},'yyyy-MM-dd HH24:mi:ss'),
+			#{keepphone},
+			#{registeredcapital},
+			#{currencytype},
+			#{mainproducts},
+			#{mainarea},
+			#{businessaddress},
+			#{specialmarket},
+			#{enterpriseType},
+			#{corplinkman},
+			'',
+			'',
+			to_date(#{logindate},'yyyy-MM-dd HH24:mi:ss'),
+			#{organizationcode},
+			#{areaid},
+			#{operatingstatus},
+			#{brandname},
+			#{personmessage},
+			SYSDATE,
+			'1',
+			'',
+			#{datagrade},
+			0,
+			#{province},
+			#{city},
+			'1',
+			'0',
+			'2',
+			#{introduce},
+			''
+		)
+	</insert>
+
+	<delete id="deleteCorpInfo" parameterType="long">
+		DELETE FROM provider_yellowpage WHERE corpid = #{corpid}
+	</delete>
+
+	<select id="selectCorpInfoByUserNames" resultType="SearchCorpInfo">
+		SELECT CORPID AS searchResultfoId,
+					LONGITUDE AS searchResultfoLongitude,
+					LATITUDE AS searchResultfoLatitude,
+					CORP_NAME AS searchResultfoTitle,
+					LEGAL_PERSON AS searchResultfoUserName,
+					CREATETIME AS searchResultfoPublicYearTime,
+					CORP_LINKMAN AS searchResultfoText,
+					REGISTERED_CAPITAL AS searchResultfoCapital,
+					CURRENCY_TYPE AS searchResultfoCapitalUnit,
+					BUSINESS_LICENSE_CODE AS searchResultfohcbu,
+					ADDRESS AS searchResultfoAddress,
+					OPERATING_STATUS AS searchResultfoBespeakAmount,
+					AREAID AS searchResultfoMeasureUnit,
+					GetDistance(#{lat},#{lon},LATITUDE,LONGITUDE) AS
+					searchResultfoDistance,
+					DATAGRADE AS searchResultfoRforumclass,
+					MAIN_PRODUCTS AS searchResultfoTp,
+					ENTERPRISETYPE AS searchResultfoBm
+		FROM PROVIDER_YELLOWPAGE
+		WHERE USERNAME IN
+		<foreach collection="usernames" index="index" item="item"
+			open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+
+	<select id="getCorpInfoById" resultType="SearchCorpInfo">
+		SELECT CORPID AS searchResultfoId,
+					LONGITUDE AS searchResultfoLongitude,
+					LATITUDE AS searchResultfoLatitude,
+					CORP_NAME AS searchResultfoTitle,
+					LEGAL_PERSON AS searchResultfoUserName,
+					CREATETIME AS searchResultfoPublicYearTime,
+					CORP_LINKMAN AS searchResultfoText,
+					REGISTERED_CAPITAL AS searchResultfoCapital,
+					CURRENCY_TYPE AS searchResultfoCapitalUnit,
+					BUSINESS_LICENSE_CODE AS searchResultfohcbu,
+					ADDRESS AS searchResultfoAddress,
+					OPERATING_STATUS AS searchResultfoBespeakAmount,
+					AREAID AS searchResultfoMeasureUnit,
+					DATAGRADE AS searchResultfoRforumclass,
+					MAIN_PRODUCTS AS searchResultfoTp,
+					ENTERPRISETYPE AS searchResultfoBm
+		FROM PROVIDER_YELLOWPAGE
+		WHERE CORPID = #{corpID}
+	</select>
+
+	<select id="corpInfoSort" statementType="CALLABLE" parameterType="Map">
+		{call provider_yellowpage_sort(#{OUT_RETURN,mode=OUT,jdbcType=VARCHAR})}
+	</select>
+
+	<select id="selectSimilarCorpInfo" resultType="SearchCorpInfo" parameterType="Map">
+		SELECT
+			b.CORPID AS searchResultfoId,
+			b.LONGITUDE AS searchResultfoLongitude,
+			b.LATITUDE AS searchResultfoLatitude,
+			b.CORP_NAME AS searchResultfoTitle,
+			b.LEGAL_PERSON AS searchResultfoUserName,
+			b.CREATETIME AS searchResultfoPublicYearTime,
+			b.CORP_LINKMAN AS searchResultfoText,
+			b.REGISTERED_CAPITAL AS searchResultfoCapital,
+			b.CURRENCY_TYPE AS searchResultfoCapitalUnit,
+			b.BUSINESS_LICENSE_CODE AS searchResultfohcbu,
+			b.ADDRESS AS searchResultfoAddress,
+			b.OPERATING_STATUS AS searchResultfoBespeakAmount,
+			b.AREAID AS searchResultfoMeasureUnit,
+			GetDistance(#{lat},#{lon},b.LATITUDE,b.LONGITUDE) AS searchResultfoDistance,
+			b.DATAGRADE AS searchResultfoRforumclass,
+			b.MAIN_PRODUCTS AS searchResultfoTp,
+			b.ENTERPRISETYPE AS searchResultfoBm,
+			NVL(a.ACCESSNUM,0) AS searchResultfoAccessNum,
+			NVL(a.CALLEDRATE,0) AS searchResultfoCalledRate
+		FROM
+		 (
+		 	SELECT	CORPID,
+		 			ACCESSNUM,
+		 			CALLEDRATE
+		 	FROM provider_yellowpage_cache 
+		 	WHERE corpid != #{corpid}
+			<if test="w != null">
+				AND INSTR(corp_name, #{w})>0
+			</if>
+			<if test="province != null"> 
+				AND province=#{province}
+			</if>
+			<if test="industry != null"> 
+				AND main_area=#{industry}
+			</if>
+		 ) a
+		LEFT JOIN provider_yellowpage b
+		ON a.corpid=b.corpid
+		WHERE rownum <![CDATA[<=]]> 10
+	</select> 
+</mapper>

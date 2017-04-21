@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.OfflineClassMapper">
+
+	<resultMap id="OfflineClass" type="com.hc360.mobileaccount.po.OfflineClass">
+        <result property="classid" column="classid"/>
+        <result property="className" column="class_name"/>
+        <result property="description" column="description"/>
+        <result property="imgUrl" column="img_url"/>
+        <result property="starttime" column="starttime"/>
+        <result property="deadline" column="deadline"/>
+        <result property="createtime" column="createtime"/>
+        <result property="timeLength" column="time_length"/>
+        <result property="peopleCnt" column="people_cnt"/>
+        <result property="location" column="location"/>
+        <result property="area" column="area"/>
+        <result property="cost" column="cost"/>
+        <result property="state" column="state"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			classid,class_name,description,img_url,starttime,deadline,createtime,time_length,people_cnt,location,area,cost,state
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="classid">
+    <![CDATA[
+        INSERT INTO sp_offline_class (
+        	classid ,
+        	class_name ,
+        	description ,
+        	img_url ,
+        	starttime ,
+        	deadline ,
+        	createtime ,
+        	time_length ,
+        	people_cnt ,
+        	location ,
+        	area ,
+        	cost ,
+        	state
+        ) VALUES (
+         	#{classid},
+         	#{className},
+         	#{description},
+         	#{imgUrl},
+         	NOW(),
+         	NOW(),
+         	NOW(),
+         	#{timeLength},
+         	#{peopleCnt},
+         	#{location},
+         	#{area},
+         	#{cost},
+         	#{state}
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_offline_class
+        <set>
+			<if test="className != null and className != ''">
+	        	class_name = #{className} ,
+	        </if>
+			<if test="description != null and description != ''">
+	        	description = #{description} ,
+	        </if>
+			<if test="imgUrl != null and imgUrl != ''">
+	        	img_url = #{imgUrl} ,
+	        </if>
+			<if test="starttime != null and starttime != ''">
+	        	starttime = #{starttime} ,
+	        </if>
+			<if test="deadline != null and deadline != ''">
+	        	deadline = #{deadline} ,
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	createtime = #{createtime} ,
+	        </if>
+			<if test="timeLength != null and timeLength != ''">
+	        	time_length = #{timeLength} ,
+	        </if>
+			<if test="peopleCnt != null and peopleCnt != ''">
+	        	people_cnt = #{peopleCnt} ,
+	        </if>
+			<if test="location != null and location != ''">
+	        	location = #{location} ,
+	        </if>
+			<if test="area != null and area != ''">
+	        	area = #{area} ,
+	        </if>
+			<if test="cost != null and cost != ''">
+	        	cost = #{cost} 
+	        </if>
+			<if test="state != null">
+	        	state = #{state} 
+	        </if>
+	    </set>
+        WHERE 
+	        classid = #{classid} 
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_offline_class WHERE
+        classid = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="OfflineClass">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_offline_class 
+	        WHERE 
+		        classid = #{id} 
+	    ]]>
+	</select>
+		
+    <select id="getOfflineClassList" resultMap="OfflineClass">
+    	SELECT <include refid="columns" />
+	    FROM sp_offline_class 
+	    <where>
+	    	state = 1
+			<if test="className != null and className != ''">
+	        	and class_name = #{className}
+	        </if>
+			<if test="description != null and description != ''">
+	        	and description = #{description}
+	        </if>
+			<if test="imgUrl != null and imgUrl != ''">
+	        	and img_url = #{imgUrl}
+	        </if>
+			<if test="starttime != null and starttime != ''">
+	        	and starttime = #{starttime}
+	        </if>
+			<if test="deadline != null and deadline != ''">
+	        	and deadline = #{deadline}
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	and createtime = #{createtime}
+	        </if>
+			<if test="timeLength != null and timeLength != ''">
+	        	and time_length = #{timeLength}
+	        </if>
+			<if test="peopleCnt != null and peopleCnt != ''">
+	        	and people_cnt = #{peopleCnt}
+	        </if>
+			<if test="location != null and location != ''">
+	        	and location = #{location}
+	        </if>
+			<if test="area != null and area != ''">
+	        	and area = #{area}
+	        </if>
+			<if test="cost != null and cost != ''">
+	        	and cost = #{cost}
+	        </if>
+	    </where>
+	    ORDER BY createtime
+	    LIMIT #{start},#{size}
+    </select>
+    
+    <select id="getOfflineClassCount" resultType="Integer">
+    	SELECT count(1)
+	    FROM sp_offline_class 
+	    <where>
+	    	state = 1
+			<if test="className != null and className != ''">
+	        	and class_name = #{className}
+	        </if>
+			<if test="description != null and description != ''">
+	        	and description = #{description}
+	        </if>
+			<if test="imgUrl != null and imgUrl != ''">
+	        	and img_url = #{imgUrl}
+	        </if>
+			<if test="starttime != null and starttime != ''">
+	        	and starttime = #{starttime}
+	        </if>
+			<if test="deadline != null and deadline != ''">
+	        	and deadline = #{deadline}
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	and createtime = #{createtime}
+	        </if>
+			<if test="timeLength != null and timeLength != ''">
+	        	and time_length = #{timeLength}
+	        </if>
+			<if test="peopleCnt != null and peopleCnt != ''">
+	        	and people_cnt = #{peopleCnt}
+	        </if>
+			<if test="location != null and location != ''">
+	        	and location = #{location}
+	        </if>
+			<if test="area != null and area != ''">
+	        	and area = #{area}
+	        </if>
+			<if test="cost != null and cost != ''">
+	        	and cost = #{cost}
+	        </if>
+	    </where>
+    </select>
+
+	
+</mapper>
+

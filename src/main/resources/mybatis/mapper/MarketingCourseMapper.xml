@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.MarketingCourseMapper">
+
+	<resultMap id="MarketingCourse" type="com.hc360.mobileaccount.po.MarketingCourse">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="steps" column="steps"/>
+        <result property="partnerSteps" column="partner_steps"/>
+        <result property="coverUrl" column="cover_url"/>
+        <result property="createtime" column="createtime"/>
+        <result property="evaluate" column="evaluate"/>
+        <result property="score" column="score"/>
+        <result property="labelnames" column="labelnames"/>
+        <result property="labelids" column="labelids"/>
+        <result property="enable" column="enable"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,name,description,steps,partner_steps,cover_url,createtime,evaluate,score,labelnames,labelids,enable
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_marketing_course (
+        	id ,
+        	name ,
+        	description ,
+        	steps ,
+        	partner_steps,
+        	cover_url ,
+        	createtime ,
+        	evaluate ,
+        	score ,
+        	labelnames ,
+        	labelids ,
+        	enable 
+        ) VALUES (
+        	#{id} ,
+        	#{name} ,
+        	#{description} ,
+        	#{steps} ,
+        	#{partnerSteps} ,
+        	#{coverUrl} ,
+        	NOW() ,
+        	#{evaluate} ,
+        	#{score} ,
+        	#{labelnames} ,
+        	#{labelids} ,
+        	#{enable} 
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_marketing_course
+        <set>
+			<if test="name != null and name != ''">
+	        	name = #{name} ,
+	        </if>
+			<if test="description != null and description != ''">
+	        	description = #{description} ,
+	        </if>
+			<if test="steps != null and steps != ''">
+	        	steps = #{steps} ,
+	        </if>
+			<if test="partnerSteps != null and partnerSteps != ''">
+	        	partner_steps = #{partnerSteps} ,
+	        </if>
+			<if test="coverUrl != null and coverUrl != ''">
+	        	cover_url = #{coverUrl} ,
+	        </if>
+			<if test="evaluate != null and evaluate != ''">
+	        	evaluate = #{evaluate} ,
+	        </if>
+			<if test="score != null and score != ''">
+	        	score = #{score} ,
+	        </if>
+			<if test="labelnames != null and labelnames != ''">
+	        	labelnames = #{labelnames} ,
+	        </if>
+			<if test="labelids != null and labelids != ''">
+	        	labelids = #{labelids} ,
+	        </if>
+			<if test="enable != null and enable != ''">
+	        	enable = #{enable} ,
+	        </if>
+	    </set>
+        WHERE 
+	        id = #{id} 
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_marketing_course WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="MarketingCourse">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_marketing_course 
+	        WHERE 
+		        id = #{id} 
+	    ]]>
+	</select>
+    <select id="getNextById" resultMap="MarketingCourse">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_marketing_course 
+	        WHERE 
+		        id = (SELECT MIN(id) FROM sp_marketing_course WHERE id>#{id})
+	    ]]>
+	</select>
+		
+    <select id="getCourseList" resultMap="MarketingCourse">
+    	SELECT id,name,description,cover_url,createtime,score,labelnames,labelids,enable
+	    FROM sp_marketing_course 
+	    where enable = 1
+	    ORDER BY createtime DESC
+	    LIMIT #{start},#{size}
+    </select>
+    <select id="getCourseCount" resultType="Integer">
+    	SELECT count(1) FROM sp_marketing_course 
+	    where enable = 1
+    </select>
+
+	    
+    <select id="getRecommendCourses" resultMap="MarketingCourse">
+    	SELECT id,name,description,cover_url,createtime,score,labelnames,labelids FROM sp_marketing_course
+		WHERE labelids like CONCAT('%',#{labelId},'%' ) and enable=1
+		LIMIT #{size}
+    </select>
+	
+</mapper>
+

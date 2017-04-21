@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.ExerciseRoomMapper">
+
+	<resultMap id="ExerciseRoom" type="com.hc360.mobileaccount.po.ExerciseRoom">
+        <result property="roomid" column="roomid"/>
+        <result property="courseid" column="courseid"/>
+        <result property="userid" column="userid"/>
+        <result property="partnerid" column="partnerid"/>
+        <result property="audioUrl" column="audio_url"/>
+        <result property="createtime" column="createtime"/>
+        <result property="state" column="state"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			roomid,courseid,userid,partnerid,audio_url,createtime,state
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="roomid">
+    <![CDATA[
+        INSERT INTO sp_exercise_room (
+        	roomid ,
+        	courseid ,
+        	userid ,
+        	partnerid ,
+        	audio_url ,
+        	createtime ,
+        	state 
+        ) VALUES (
+        	#{roomid} ,
+        	#{courseid} ,
+        	#{userid} ,
+        	#{partnerid} ,
+        	#{audioUrl} ,
+        	NOW() ,
+        	#{state} 
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_exercise_room
+        <set>
+				<if test="courseid != null and courseid != ''">
+		        	courseid = #{courseid} ,
+		        </if>
+				<if test="userid != null and userid != ''">
+		        	userid = #{userid} ,
+		        </if>
+				<if test="partnerid != null and partnerid != ''">
+		        	partnerid = #{partnerid} ,
+		        </if>
+				<if test="audioUrl != null and audioUrl != ''">
+		        	audio_url = #{audioUrl} ,
+		        </if>
+				<if test="createtime != null and createtime != ''">
+		        	createtime = #{createtime} ,
+		        </if>
+				<if test="state != null and state != ''">
+		        	state = #{state} 
+		        </if>
+	    </set>
+	        
+        WHERE 
+	        roomid = #{roomid} 
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_exercise_room WHERE
+        roomid = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="ExerciseRoom">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_exercise_room 
+	        WHERE 
+		        roomid = #{id} 
+	    ]]>
+	</select>
+		
+    <select id="getRoomList" resultMap="ExerciseRoom">
+    	SELECT <include refid="columns" />,1 role
+	    FROM sp_exercise_room 
+	    <where>
+	    	<if test="courseid !=null and courseid !=''">
+	    		and courseid = #{courseid}
+	    	</if>
+	    	<if test="userid !=null and userid !=''">
+	    		and userid = #{userid}
+	    	</if>
+	    	<if test="partnerid !=null and partnerid !=''">
+	    		and partnerid = #{partnerid}
+	    	</if>
+	    	<if test="state !=null and state !=''">
+	    		and state = #{state}
+	    	</if>
+	    	<if test="myId !=null and myId !=''">
+	    		and userid = #{myId} UNION ALL SELECT *,2 role FROM sp_exercise_room
+				WHERE partnerid = #{myId} and state = #{state}
+	    	</if>
+	    </where>
+    </select>
+
+	
+</mapper>
+

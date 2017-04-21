@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<rsf xmlns="http://code.hc360.com/schema/rsf"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:rsf="http://code.hc360.com/schema/rsf">
+	
+	<rsf:registry host="register.org.hc360.com" ></rsf:registry>
+	
+	<rsf:client id="kvdbbcService" displayName="商机详情服务" owner="zhanglf" department="架构研发部" 
+		interfaceClass="com.hc360.rsf.kvdb.service.KVDBbcService" portalId="kvdb">
+	</rsf:client>
+
+	<rsf:client id="clientUserServiceImpl" displayName="lixin" owner="李信"
+			department="mobiledepartment"
+			interfaceClass="com.hc360.rsf.imgup.FileStorageService" url="" portalId="FileStorageService">
+	</rsf:client>
+</rsf>

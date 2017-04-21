@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.UserMessageMapper">
+
+	<resultMap id="UserMessage" type="com.hc360.mobileaccount.po.UserMessage">
+        <result property="msgid" column="msgid"/>
+        <result property="fromUserid" column="from_userid"/>
+        <result property="toUserid" column="to_userid"/>
+        <result property="title" column="title"/>
+        <result property="tips" column="tips"/>
+        <result property="createtime" column="createtime"/>
+        <result property="objectid" column="objectid"/>
+        <result property="content" column="content"/>
+        <result property="type" column="type"/>
+        
+         <collection property="user" ofType="Account">
+        	<result property="accountid" column="accountid"/>
+        	<result property="phonenum" column="phonenum"/>
+			<result property="nickname" column="nickname"/>
+			<result property="headerimg" column="headerimg"/>
+			<result property="corpname" column="corpname"/>
+        </collection>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			msgid,from_userid,to_userid,title,tips,createtime,objectid,content,type
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="msgid">
+    <![CDATA[
+        INSERT INTO sp_user_message (
+        	msgid ,
+        	from_userid ,
+        	to_userid ,
+        	title ,
+        	tips ,
+        	createtime ,
+        	objectid ,
+        	content ,
+        	type 
+        ) VALUES (
+         	#{msgid},
+         	#{fromUserid},
+         	#{toUserid},
+         	#{title},
+         	#{tips},
+         	NOW(),
+         	#{objectid},
+         	#{content},
+         	#{type}
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_user_message
+        <set>
+			<if test="fromUserid != null and fromUserid != ''">
+	        	from_userid = #{fromUserid} ,
+	        </if>
+			<if test="toUserid != null and toUserid != ''">
+	        	to_userid = #{toUserid} ,
+	        </if>
+			<if test="title != null and title != ''">
+	        	title = #{title} ,
+	        </if>
+			<if test="tips != null and tips != ''">
+	        	tips = #{tips} ,
+	        </if>
+			<if test="createtime != null and createtime != ''">
+	        	createtime = #{createtime} ,
+	        </if>
+			<if test="objectid != null and objectid != ''">
+	        	objectid = #{objectid} ,
+	        </if>
+			<if test="content != null and content != ''">
+	        	content = #{content} ,
+	        </if>
+			<if test="type != null and type != ''">
+	        	type = #{type} 
+	        </if>
+	    </set>
+        WHERE 
+	        msgid = #{msgid} 
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_user_message WHERE
+        msgid = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="UserMessage">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_user_message 
+	        WHERE 
+		        msgid = #{id} 
+	    ]]>
+	</select>
+		
+    <select id="getUserMessageList" resultMap="UserMessage">
+    	SELECT um.*
+    	<if test="fromUserid != null and fromUserid != ''">
+    		,i.accountid,i.nickname,i.headerimg,i.corpname
+    	</if>
+    	<if test="toUserid != null and toUserid != ''">
+    		,i2.accountid,i2.nickname,i2.headerimg,i2.corpname
+    	</if>
+	    FROM sp_user_message um
+	    <if test="fromUserid != null and fromUserid != ''">
+	    	LEFT JOIN p_account_info i ON i.accountid = um.to_userid
+	    </if>
+	    <if test="toUserid != null and toUserid != ''">
+	    	LEFT JOIN p_account_info i2 ON i2.accountid = um.from_userid
+	    </if>
+	    <where>
+			<if test="fromUserid != null and fromUserid != ''">
+	        	and um.from_userid = #{fromUserid}
+	        </if>
+			<if test="toUserid != null and toUserid != ''">
+	        	and um.to_userid = #{toUserid}
+	        </if>
+			<if test="objectid != null and objectid != ''">
+	        	and um.objectid = #{objectid}
+	        </if>
+	        <!-- 用户的私信留言只显示和某个人最新的一条 -->
+	        <if test="type != null and type != '' and type==2">
+	        	AND NOT EXISTS(SELECT 1 FROM sp_user_message WHERE from_userid=um.from_userid AND to_userid=um.to_userid AND type=2 AND createtime>um.createtime)
+	    	</if>
+			<if test="type != null and type != ''">
+	        	and um.type = #{type}
+	        </if>
+			<if test="types != null and types != ''">
+	        	and um.type in 
+	        	<foreach item="item" index="index" collection="types" open="(" separator="," close=")">  
+				 	#{item}  
+				</foreach> 
+	        </if>
+	    </where>
+	   
+	    ORDER BY um.createtime DESC
+	    LIMIT #{start},#{size}
+	    
+    </select>
+    
+    <select id="getUserMessageCount" resultType="Integer">
+    	SELECT count(1)
+	    FROM sp_user_message um
+	    <where>
+			<if test="fromUserid != null and fromUserid != ''">
+	        	and from_userid = #{fromUserid}
+	        </if>
+			<if test="toUserid != null and toUserid != ''">
+	        	and to_userid = #{toUserid}
+	        </if>
+			<if test="objectid != null and objectid != ''">
+	        	and objectid = #{objectid}
+	        </if>
+			<if test="type != null and type != ''">
+	        	and type = #{type}
+	        </if>
+	        <if test="types != null and types != ''">
+	        	and type in 
+	        	<foreach item="item" index="index" collection="types" open="(" separator="," close=")">  
+				 	#{item}  
+				</foreach> 
+	        </if>
+	        <if test="type != null and type != '' and type==2">
+	        	AND NOT EXISTS(SELECT 1 FROM sp_user_message WHERE from_userid=um.from_userid AND to_userid=um.to_userid AND type=2 AND createtime>um.createtime)
+	    	</if>
+	    </where>
+    </select>
+
+
+	<select id="getUserChatMessageCount" resultType="Integer">
+		SELECT count(1)
+	    FROM sp_user_message 
+	    <where>
+			<if test="fromUserid != null and fromUserid != '' and toUserid != null and toUserid != ''">
+	        	and ((from_userid = #{fromUserid} AND to_userid = #{toUserid}) OR (from_userid = #{toUserid}) AND to_userid = #{fromUserid})
+	        </if>
+			<if test="type != null and type != ''">
+	        	and type = #{type}
+	        </if>
+	        <if test="types != null and types != ''">
+	        	and type in 
+	        	<foreach item="item" index="index" collection="types" open="(" separator="," close=")">  
+				 	#{item}  
+				</foreach> 
+	        </if>
+	    </where>
+	</select>
+	
+	
+	<select id="getUserChatMessageList" resultMap="UserMessage">
+		SELECT um.*,i.accountid,i.nickname,i.headerimg,i.corpname
+	    FROM sp_user_message um
+	    LEFT JOIN p_account_info i ON i.accountid = um.from_userid
+	    <where>
+			<if test="fromUserid != null and fromUserid != '' and toUserid != null and toUserid != ''">
+	        	and ((from_userid = #{fromUserid} AND to_userid = #{toUserid}) OR (from_userid = #{toUserid}) AND to_userid = #{fromUserid})
+	        </if>
+			<if test="type != null and type != ''">
+	        	and type = #{type}
+	        </if>
+	        <if test="types != null and types != ''">
+	        	and type in 
+	        	<foreach item="item" index="index" collection="types" open="(" separator="," close=")">  
+				 	#{item}  
+				</foreach> 
+	        </if>
+	    </where>
+	    ORDER BY um.createtime DESC
+	    LIMIT #{start},#{size}
+	</select>
+	
+</mapper>
+

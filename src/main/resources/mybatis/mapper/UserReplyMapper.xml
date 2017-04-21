@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.UserReplyMapper">
+
+	<resultMap id="UserReply" type="com.hc360.mobileaccount.po.UserReply">
+        <result property="id" column="id"/>
+        <result property="content" column="content"/>
+        <result property="imgUrl" column="img_url"/>
+        <result property="audioUrl" column="audio_url"/>
+        <result property="timeLength" column="time_length"/>
+        <result property="createtime" column="createtime"/>
+        <result property="praiseCnt" column="praise_cnt"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,content,img_url,audio_url,time_length,createtime,praise_cnt
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_user_reply (
+        	id ,
+        	content ,
+        	img_url ,
+        	audio_url ,
+        	time_length,
+        	createtime ,
+        	praise_cnt 
+        ) VALUES (
+        	#{id} ,
+        	#{content} ,
+        	#{imgUrl} ,
+        	#{audioUrl} ,
+        	#{timeLength} ,
+        	NOW(),
+        	0 
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update">
+    <![CDATA[
+        UPDATE sp_user_reply SET
+	        content = #{content} ,
+	        img_url = #{imgUrl} ,
+	        audio_url = #{audioUrl} ,
+	        time_length = #{timeLength} ,
+	        createtime = #{createtime} ,
+	        praise_cnt = #{praiseCnt} 
+        WHERE 
+	        id = #{id} 
+    ]]>
+	</update>
+
+    <delete id="delete">
+    <![CDATA[
+        DELETE FROM sp_user_reply WHERE
+        id = #{id} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="UserReply">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_user_reply 
+	        WHERE 
+		        id = #{id} 
+	    ]]>
+	</select>
+		
+	<update id="addPraiseCnt">
+		UPDATE sp_user_reply SET praise_cnt = praise_cnt+1 WHERE id = #{id} 
+	</update>
+	
+	<update id="reducePraiseCnt">
+		UPDATE sp_user_reply SET praise_cnt = if(praise_cnt>0,praise_cnt-1,0) WHERE id = #{id} 
+	</update>
+    
+</mapper>
+

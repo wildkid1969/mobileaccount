@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 使用namespace的话sql搜索定位会比较方便 -->
+<mapper namespace="com.hc360.mobileaccount.dao.ExerciseAutoMatchMapper">
+
+	<resultMap id="ExerciseAutoMatch" type="com.hc360.mobileaccount.po.ExerciseAutoMatch">
+        <result property="id" column="id"/>
+        <result property="userid" column="userid"/>
+        <result property="courseid" column="courseid"/>
+        <result property="createtime" column="createtime"/>
+        
+        <result property="nickname" column="nickname"/>
+        <result property="headerimg" column="headerimg"/>
+        <result property="phone" column="phonenum"/>
+        <result property="corpname" column="corpname"/>
+        <result property="aposition" column="aposition"/>
+	</resultMap>
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="columns">
+	    <![CDATA[
+			id,userid,courseid,createtime
+	    ]]>
+	</sql>
+
+	<!-- useGeneratedKeys="true" keyProperty="xxx" for sqlserver and mysql -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <![CDATA[
+        INSERT INTO sp_exercise_auto_match (
+        	id ,
+        	userid ,
+        	courseid ,
+        	createtime 
+        ) VALUES (
+        	#{id} ,
+        	#{userid} ,
+        	#{courseid} ,
+        	NOW()
+        )
+    ]]>
+		<!--	
+			oracle: order="BEFORE" SELECT sequenceName.nextval AS ID FROM DUAL 
+			DB2: order="BEFORE"" values nextval for sequenceName
+		<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="userId">
+			SELECT sequenceName.nextval AS ID FROM DUAL 
+        </selectKey>
+		-->
+	</insert>
+    
+	<update id="update" >
+        UPDATE sp_exercise_auto_match
+        <set>
+			<if test="userid != null and userid != ''">
+	        	userid = #{userid} ,
+	        </if>
+			<if test="courseid != null and courseid != ''">
+	        	courseid = #{courseid} ,
+	        </if>
+			<if test="courseid ==0">
+	        	courseid = null ,
+	        </if>
+			<if test="courseid != null and courseid != ''">
+	        	createtime = NOW()
+	        </if>
+	    </set>
+        WHERE 
+	        id = #{id} 
+	</update>
+
+    <delete id="deleteByUserid">
+    <![CDATA[
+        DELETE FROM sp_exercise_auto_match WHERE
+        userid = #{userId} 
+    ]]>
+    </delete>
+    
+    <select id="getById" resultMap="ExerciseAutoMatch">
+		SELECT <include refid="columns" />
+	    <![CDATA[
+		    FROM sp_exercise_auto_match 
+	        WHERE 
+		        id = #{id} 
+	    ]]>
+	</select>
+	
+	<select id="getAutoMatchCount" resultType="Integer">
+		SELECT COUNT(1) FROM sp_exercise_auto_match
+		<where>
+	    	<if test="userid!=null and userid!=''">
+	    		and userid = #{userid}
+	    	</if>
+	    	<if test="courseid!=null and courseid!=''">
+	    		and courseid = #{courseid}
+	    	</if>
+	    </where>
+	</select>
+	
+	<select id="getAutoMatchList" resultMap="ExerciseAutoMatch">
+		SELECT <include refid="columns" /> FROM sp_exercise_auto_match
+		<where>
+	    	<if test="userid!=null and userid!=''">
+	    		and userid = #{userid}
+	    	</if>
+	    	<if test="courseid!=null and courseid!=''">
+	    		and courseid = #{courseid}
+	    	</if>
+	    </where>
+	</select>
+		
+    <select id="getAutoMathUserList" resultMap="ExerciseAutoMatch">
+    	SELECT m.*,i.nickname,i.headerimg,i.phonenum phone,i.corpname,i.aposition
+	    FROM sp_exercise_auto_match m
+	    LEFT JOIN p_account_info i ON i.accountid = m.userid
+	    <where>
+	    	<if test="userid!=null and userid!=''">
+	    		and m.userid = #{userid}
+	    	</if>
+	    	<if test="courseid!=null and courseid!=''">
+	    		and m.courseid = #{courseid}
+	    	</if>
+	    	<if test="myId!=null and myId!=''">
+	    		and m.userid != #{myId}
+	    	</if>
+	    </where>
+	    <if test="rand!=null and rand!='' and rand==1">
+	    	ORDER BY m.createtime ASC
+	    </if>
+	    <if test="rand!=null and rand!='' and rand==2">
+	    	ORDER BY m.createtime DESC
+	    </if>
+	    LIMIT #{size}
+    </select>
+
+	
+</mapper>
